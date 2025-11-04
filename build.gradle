@@ -29,10 +29,10 @@ dependencies {
 
     testImplementation 'io.quarkus:quarkus-junit5'
     testImplementation 'io.rest-assured:rest-assured'
-    testImplementation("org.opensearch:opensearch-testcontainers:3.0.2")
+    testImplementation 'org.opensearch:opensearch-testcontainers:4.0.0'
     testImplementation libs.json.schema.validator
     testImplementation libs.testcontainers
-    testImplementation("org.testcontainers:kafka:1.21.3")
+    testImplementation 'org.testcontainers:kafka:1.21.3'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.awaitility:awaitility'
 
@@ -41,7 +41,7 @@ dependencies {
     implementation 'io.pipeline:pipeline-api'
     implementation 'io.pipeline:data-util'
     implementation 'io.pipeline:dynamic-grpc'
-    implementation libs.opensearch.java
+    implementation 'org.opensearch.client:opensearch-java:3.3.0'
     implementation libs.httpclient5
     implementation libs.commons.lang3
     

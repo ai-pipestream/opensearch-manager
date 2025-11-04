@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - Class Gradle Test Executor 1</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>Class Gradle Test Executor 1</h1>
+<div class="breadcrumbs">
+<a href="../index.html">all</a> &gt; 
+<a href="../packages/default-package.html">default-package</a> &gt; Gradle Test Executor 1</div>
+<div id="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox" id="tests">
+<div class="counter">1</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="failures">
+<div class="counter">1</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="ignored">
+<div class="counter">0</div>
+<p>ignored</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="duration">
+<div class="counter">5m50.50s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox failures" id="successRate">
+<div class="percent">0%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a href="#">Failed tests</a>
+</li>
+<li>
+<a href="#">Tests</a>
+</li>
+<li>
+<a href="#">Standard output</a>
+</li>
+<li>
+<a href="#">Standard error</a>
+</li>
+</ul>
+<div class="tab">
+<h2>Failed tests</h2>
+<div class="test">
+<a name="failed to execute tests"></a>
+<h3 class="failures">failed to execute tests</h3>
+<span class="code">
+<pre id="test-message-failed to execute tests">org.gradle.api.internal.tasks.testing.TestSuiteExecutionException: Could not execute test class 'io.pipeline.schemamanager.IndexAnyDocumentTest'.
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:56)
+	at java.base@25.0.1/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base@25.0.1/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.processTestClass(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:177)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at app//worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at app//worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+Caused by: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:375)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:292)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:60)
+	at io.quarkus.test.junit.AppMakerHelper.getStartupAction(AppMakerHelper.java:253)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getOrCreateRuntimeClassLoader(FacadeClassLoader.java:587)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getQuarkusClassLoader(FacadeClassLoader.java:484)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.loadClass(FacadeClassLoader.java:366)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:547)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.loadClass(JUnitPlatformTestClassProcessor.java:184)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.access$100(JUnitPlatformTestClassProcessor.java:62)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:120)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:110)
+	at org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestClassProcessor.processTestClass(AbstractJUnitTestClassProcessor.java:61)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:54)
+	... 17 more
+Caused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.builder.Execution.run(Execution.java:139)
+	at io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:78)
+	at io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:160)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:371)
+	... 31 more
+Caused by: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base@25.0.1/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base@25.0.1/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+</pre>
+<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="test-message-failed to execute tests">Copy</button>
+</span>
+<span class="code">
+<pre id="test-message-failed to execute tests">org.gradle.api.internal.tasks.testing.TestSuiteExecutionException: Could not execute test class 'io.pipeline.schemamanager.SchemaManagerServiceTest'.
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:56)
+	at java.base@25.0.1/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base@25.0.1/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.processTestClass(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:177)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at app//worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at app//worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+Caused by: java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:375)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:292)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:60)
+	at io.quarkus.test.junit.AppMakerHelper.getStartupAction(AppMakerHelper.java:253)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getOrCreateRuntimeClassLoader(FacadeClassLoader.java:587)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getQuarkusClassLoader(FacadeClassLoader.java:484)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.loadClass(FacadeClassLoader.java:366)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:547)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.loadClass(JUnitPlatformTestClassProcessor.java:184)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.access$100(JUnitPlatformTestClassProcessor.java:62)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:120)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:110)
+	at org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestClassProcessor.processTestClass(AbstractJUnitTestClassProcessor.java:61)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:54)
+	... 17 more
+Caused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.builder.Execution.run(Execution.java:139)
+	at io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:78)
+	at io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:160)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:371)
+	... 31 more
+Caused by: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base@25.0.1/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base@25.0.1/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+</pre>
+<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="test-message-failed to execute tests">Copy</button>
+</span>
+</div>
+</div>
+<div class="tab">
+<h2>Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td class="failures">failed to execute tests</td>
+<td class="failures">5m50.50s</td>
+<td class="failures">failed</td>
+</tr>
+</table>
+</div>
+<div class="tab">
+<h2>Standard output</h2>
+<span class="code">
+<pre id="class-stdout">2025-11-03 20:39:56,146 WARN  [io.sma.config] (Test worker) SRCFG01007: Duplicate value found for name : %test.mp.messaging.connector.smallrye-kafka.apicurio.registry.url, config source name : PropertiesConfigSource[source=file:/home/krickert/IdeaProjects/gitea/opensearch-manager/build/resources/main/application.properties], (old value : ${APICURIO_REGISTRY_URL:http://localhost:8082/apis/registry/v3})
+2025-11-03 20:39:56,631 WARN  [io.sma.config] (Test worker) SRCFG01007: Duplicate value found for name : %test.mp.messaging.connector.smallrye-kafka.apicurio.registry.url, config source name : PropertiesConfigSource[source=file:/home/krickert/IdeaProjects/gitea/opensearch-manager/build/resources/main/application.properties], (old value : ${APICURIO_REGISTRY_URL:http://localhost:8082/apis/registry/v3})
+2025-11-03 20:39:56,684 WARN  [io.sma.config] (Test worker) SRCFG01007: Duplicate value found for name : %test.mp.messaging.connector.smallrye-kafka.apicurio.registry.url, config source name : PropertiesConfigSource[source=file:/home/krickert/IdeaProjects/gitea/opensearch-manager/build/resources/main/application.properties], (old value : ${APICURIO_REGISTRY_URL:http://localhost:8082/apis/registry/v3})
+2025-11-03 20:39:57,359 WARN  [io.qua.arc.dep.SplitPackageProcessor] (build-43) Detected a split package usage which is considered a bad practice and should be avoided. Following packages were detected in multiple archives: 
+- &quot;io.apicurio.registry.client&quot; found in [io.apicurio:apicurio-registry-java-sdk-common:3.1.1, io.apicurio:apicurio-registry-java-sdk:3.1.1, io.apicurio:apicurio-registry-v2-java-sdk:3.1.1]
+- &quot;io.apicurio.registry.serde&quot; found in [io.apicurio:apicurio-registry-serde-common:3.1.1, io.apicurio:apicurio-registry-serde-kafka-common:3.1.1]
+- &quot;io.apicurio.registry.content.canon&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.data&quot; found in [io.apicurio:apicurio-registry-serde-common:3.1.1, io.apicurio:apicurio-registry-serde-kafka-common:3.1.1]
+- &quot;io.apicurio.registry.content.refs&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.protobuf.ref&quot; found in [io.apicurio:apicurio-registry-protobuf-serde-kafka:3.1.1, io.apicurio:apicurio-registry-serde-common-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.config&quot; found in [io.apicurio:apicurio-registry-serde-common:3.1.1, io.apicurio:apicurio-registry-serde-kafka-common:3.1.1]
+- &quot;io.apicurio.registry.rules.validity&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;grpc.health.v1&quot; found in [io.pipeline:grpc-stubs:1.0.0-SNAPSHOT, io.quarkus:quarkus-grpc-stubs:3.29.0]
+- &quot;io.apicurio.registry.content&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.protobuf&quot; found in [io.apicurio:apicurio-registry-protobuf-serde-kafka:3.1.1, io.apicurio:apicurio-registry-serde-common-protobuf:3.1.1]
+- &quot;io.apicurio.registry.content.dereference&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.rules.compatibility&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+2025-11-03 20:39:57,367 INFO  [org.tes.DockerClientFactory] (build-15) Testcontainers version: 2.0.1
+2025-11-03 20:39:57,465 INFO  [org.tes.doc.DockerClientProviderStrategy] (build-15) Loaded org.testcontainers.dockerclient.UnixSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
+2025-11-03 20:39:57,571 INFO  [org.tes.doc.DockerClientProviderStrategy] (build-15) Found Docker environment with local Unix socket (unix:///var/run/docker.sock)
+2025-11-03 20:39:57,572 INFO  [org.tes.DockerClientFactory] (build-15) Docker host IP address is localhost
+2025-11-03 20:39:57,579 INFO  [org.tes.DockerClientFactory] (build-15) Connected to docker: 
+  Server Version: 28.5.1
+  API Version: 1.51
+  Operating System: Ubuntu 24.04.3 LTS
+  Total Memory: 126421 MB
+2025-11-03 20:39:57,582 INFO  [org.tes.ima.PullPolicy] (build-15) Image pull policy will be performed by: DefaultPullPolicy()
+2025-11-03 20:39:57,583 INFO  [org.tes.uti.ImageNameSubstitutor] (build-15) Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+2025-11-03 20:39:57,585 INFO  [org.tes.DockerClientFactory] (build-15) Checking the system...
+2025-11-03 20:39:57,585 INFO  [org.tes.DockerClientFactory] (build-15) ✔︎ Docker server version should be at least 1.6.0
+2025-11-03 20:39:57,707 INFO  [io.qua.dev.dep.com.ComposeProject] (build-58) Waiting for service mysql-test to be ready
+2025-11-03 20:39:57,707 INFO  [io.qua.dev.dep.com.ComposeProject] (build-22) Waiting for service apicurio-registry-test to be ready
+2025-11-03 20:39:57,707 INFO  [io.qua.dev.dep.com.ComposeProject] (build-42) Waiting for service kafka-test to be ready
+2025-11-03 20:39:57,710 INFO  [io.qua.dev.dep.com.ComposeProject] (build-42) Service kafka-test is ready
+2025-11-03 20:39:57,710 INFO  [io.qua.dev.dep.com.ComposeProject] (build-58) Service mysql-test is ready
+2025-11-03 20:39:57,710 INFO  [io.qua.dev.dep.com.ComposeProject] (build-22) Service apicurio-registry-test is ready
+2025-11-03 20:39:57,711 INFO  [io.qua.dev.dep.com.ComposeDevServicesProcessor] (build-15) Discovered existing Compose services for project pipeline-test-services
+2025-11-03 20:39:57,810 WARN  [io.sma.config] (Test worker) SRCFG01007: Duplicate value found for name : %test.mp.messaging.connector.smallrye-kafka.apicurio.registry.url, config source name : PropertiesConfigSource[source=file:/home/krickert/IdeaProjects/gitea/opensearch-manager/build/resources/main/application.properties], (old value : ${APICURIO_REGISTRY_URL:http://localhost:8082/apis/registry/v3})
+2025-11-03 20:39:57,822 WARN  [io.sma.config] (Test worker) SRCFG01007: Duplicate value found for name : %test.mp.messaging.connector.smallrye-kafka.apicurio.registry.url, config source name : PropertiesConfigSource[source=file:/home/krickert/IdeaProjects/gitea/opensearch-manager/build/resources/main/application.properties], (old value : ${APICURIO_REGISTRY_URL:http://localhost:8082/apis/registry/v3})
+2025-11-03 20:39:58,139 WARN  [io.qua.arc.dep.SplitPackageProcessor] (build-20) Detected a split package usage which is considered a bad practice and should be avoided. Following packages were detected in multiple archives: 
+- &quot;io.apicurio.registry.client&quot; found in [io.apicurio:apicurio-registry-java-sdk-common:3.1.1, io.apicurio:apicurio-registry-java-sdk:3.1.1, io.apicurio:apicurio-registry-v2-java-sdk:3.1.1]
+- &quot;io.apicurio.registry.serde&quot; found in [io.apicurio:apicurio-registry-serde-common:3.1.1, io.apicurio:apicurio-registry-serde-kafka-common:3.1.1]
+- &quot;io.apicurio.registry.content.canon&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.data&quot; found in [io.apicurio:apicurio-registry-serde-common:3.1.1, io.apicurio:apicurio-registry-serde-kafka-common:3.1.1]
+- &quot;io.apicurio.registry.content.refs&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.protobuf.ref&quot; found in [io.apicurio:apicurio-registry-protobuf-serde-kafka:3.1.1, io.apicurio:apicurio-registry-serde-common-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.config&quot; found in [io.apicurio:apicurio-registry-serde-common:3.1.1, io.apicurio:apicurio-registry-serde-kafka-common:3.1.1]
+- &quot;io.apicurio.registry.rules.validity&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;grpc.health.v1&quot; found in [io.pipeline:grpc-stubs:1.0.0-SNAPSHOT, io.quarkus:quarkus-grpc-stubs:3.29.0]
+- &quot;io.apicurio.registry.content&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.protobuf&quot; found in [io.apicurio:apicurio-registry-protobuf-serde-kafka:3.1.1, io.apicurio:apicurio-registry-serde-common-protobuf:3.1.1]
+- &quot;io.apicurio.registry.content.dereference&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.rules.compatibility&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+2025-11-03 20:39:58,573 WARN  [io.sma.config] (Test worker) SRCFG01007: Duplicate value found for name : %test.mp.messaging.connector.smallrye-kafka.apicurio.registry.url, config source name : PropertiesConfigSource[source=file:/home/krickert/IdeaProjects/gitea/opensearch-manager/build/resources/main/application.properties], (old value : ${APICURIO_REGISTRY_URL:http://localhost:8082/apis/registry/v3})
+2025-11-03 20:39:58,616 WARN  [io.sma.config] (Test worker) SRCFG01007: Duplicate value found for name : %test.mp.messaging.connector.smallrye-kafka.apicurio.registry.url, config source name : PropertiesConfigSource[source=file:/home/krickert/IdeaProjects/gitea/opensearch-manager/build/resources/main/application.properties], (old value : ${APICURIO_REGISTRY_URL:http://localhost:8082/apis/registry/v3})
+2025-11-03 20:39:58,936 INFO  [io.qua.wir.dev.WireMockServer] (build-37) Using HTTP server impl: Jetty11HttpServer
+2025-11-03 20:39:59,160 WARN  [io.qua.arc.dep.SplitPackageProcessor] (build-54) Detected a split package usage which is considered a bad practice and should be avoided. Following packages were detected in multiple archives: 
+- &quot;io.apicurio.registry.client&quot; found in [io.apicurio:apicurio-registry-java-sdk-common:3.1.1, io.apicurio:apicurio-registry-java-sdk:3.1.1, io.apicurio:apicurio-registry-v2-java-sdk:3.1.1]
+- &quot;io.apicurio.registry.serde&quot; found in [io.apicurio:apicurio-registry-serde-common:3.1.1, io.apicurio:apicurio-registry-serde-kafka-common:3.1.1]
+- &quot;io.apicurio.registry.content.canon&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.data&quot; found in [io.apicurio:apicurio-registry-serde-common:3.1.1, io.apicurio:apicurio-registry-serde-kafka-common:3.1.1]
+- &quot;io.apicurio.registry.content.refs&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.protobuf.ref&quot; found in [io.apicurio:apicurio-registry-protobuf-serde-kafka:3.1.1, io.apicurio:apicurio-registry-serde-common-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.config&quot; found in [io.apicurio:apicurio-registry-serde-common:3.1.1, io.apicurio:apicurio-registry-serde-kafka-common:3.1.1]
+- &quot;io.apicurio.registry.rules.validity&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;grpc.health.v1&quot; found in [io.pipeline:grpc-stubs:1.0.0-SNAPSHOT, io.quarkus:quarkus-grpc-stubs:3.29.0]
+- &quot;io.apicurio.registry.content&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.serde.protobuf&quot; found in [io.apicurio:apicurio-registry-protobuf-serde-kafka:3.1.1, io.apicurio:apicurio-registry-serde-common-protobuf:3.1.1]
+- &quot;io.apicurio.registry.content.dereference&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+- &quot;io.apicurio.registry.rules.compatibility&quot; found in [io.apicurio:apicurio-registry-schema-util-common:3.1.1, io.apicurio:apicurio-registry-schema-util-protobuf:3.1.1]
+2025-11-03 20:39:59,475 INFO  [io.qua.sma.dep.processor] (build-28) Generating Jackson deserializer for type io.pipeline.repository.filesystem.DriveUpdateNotification
+2025-11-03 20:39:59,476 INFO  [io.qua.sma.dep.processor] (build-28) Generating Jackson deserializer for type io.pipeline.repository.filesystem.RepositoryEvent
+2025-11-03 20:39:59,477 INFO  [io.qua.sma.dep.processor] (build-28) Generating Jackson deserializer for type io.pipeline.repository.v1.ModuleUpdateNotification
+2025-11-03 20:39:59,477 INFO  [io.qua.sma.dep.processor] (build-28) Generating Jackson deserializer for type io.pipeline.repository.v1.PipeDocUpdateNotification
+2025-11-03 20:39:59,477 INFO  [io.qua.sma.dep.processor] (build-28) Generating Jackson deserializer for type io.pipeline.repository.v1.ProcessRequestUpdateNotification
+2025-11-03 20:39:59,477 INFO  [io.qua.sma.dep.processor] (build-28) Generating Jackson deserializer for type io.pipeline.repository.v1.ProcessResponseUpdateNotification
+2025-11-03 20:39:59,478 INFO  [io.qua.sma.dep.processor] (build-28) Generating Jackson deserializer for type io.pipeline.config.v1.GraphUpdateNotification
+2025-11-03 20:39:59,543 WARN  [io.qua.arc.pro.BeanArchives] (build-62) Failed to index io.apicurio.common.apps.config.Info: Class does not exist in ClassLoader QuarkusClassLoader:Deployment Class Loader: TEST for JUnitQuarkusTest-io.pipeline.schemamanager.kafka.RepositoryUpdateConsumerTest$KafkaTestProfile (QuarkusTest)@2d3b0978
+2025-11-03 20:39:59,543 INFO  [io.qua.arc.pro.IndexClassLookupUtils] (build-62) Class for name: io.apicurio.common.apps.config.Info was not found in Jandex index. Please ensure the class is part of the index.
+2025-11-03 20:45:44,275 INFO  [io.sma.rea.mes.kafka] (smallrye-kafka-consumer-thread-0) SRMSG18224: Executing consumer revoked re-balance listener for group 'opensearch-manager'
+2025-11-03 20:45:44,298 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-5) [Producer clientId=producer-5] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2025-11-03 20:45:44,299 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-5) [Producer clientId=producer-5] Bootstrap broker localhost:9092 (id: -1 rack: null isFenced: false) disconnected
+2025-11-03 20:45:44,315 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-3) [Producer clientId=producer-3] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2025-11-03 20:45:44,315 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-3) [Producer clientId=producer-3] Bootstrap broker localhost:9092 (id: -1 rack: null isFenced: false) disconnected
+2025-11-03 20:45:44,428 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-1) [Producer clientId=producer-1] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2025-11-03 20:45:44,428 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-1) [Producer clientId=producer-1] Bootstrap broker localhost:9092 (id: -1 rack: null isFenced: false) disconnected
+2025-11-03 20:45:44,491 INFO  [io.sma.rea.mes.kafka] (smallrye-kafka-consumer-thread-1) SRMSG18224: Executing consumer revoked re-balance listener for group 'opensearch-manager'
+2025-11-03 20:45:44,624 INFO  [io.sma.rea.mes.kafka] (smallrye-kafka-consumer-thread-2) SRMSG18224: Executing consumer revoked re-balance listener for group 'opensearch-manager'
+2025-11-03 20:45:44,634 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-2) [Producer clientId=producer-2] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2025-11-03 20:45:44,634 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-2) [Producer clientId=producer-2] Bootstrap broker localhost:9092 (id: -1 rack: null isFenced: false) disconnected
+2025-11-03 20:45:44,959 INFO  [io.sma.rea.mes.kafka] (smallrye-kafka-consumer-thread-3) SRMSG18224: Executing consumer revoked re-balance listener for group 'opensearch-manager'
+2025-11-03 20:45:45,132 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-4) [Producer clientId=producer-4] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2025-11-03 20:45:45,132 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-4) [Producer clientId=producer-4] Bootstrap broker localhost:9092 (id: -1 rack: null isFenced: false) disconnected
+2025-11-03 20:45:45,273 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-3) [Producer clientId=producer-3] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2025-11-03 20:45:45,273 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-3) [Producer clientId=producer-3] Bootstrap broker localhost:9092 (id: -1 rack: null isFenced: false) disconnected
+2025-11-03 20:45:45,280 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-1) [Producer clientId=producer-1] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2025-11-03 20:45:45,280 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-1) [Producer clientId=producer-1] Bootstrap broker localhost:9092 (id: -1 rack: null isFenced: false) disconnected
+2025-11-03 20:45:45,300 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-5) [Producer clientId=producer-5] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2025-11-03 20:45:45,300 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-5) [Producer clientId=producer-5] Bootstrap broker localhost:9092 (id: -1 rack: null isFenced: false) disconnected
+2025-11-03 20:45:45,455 INFO  [io.sma.rea.mes.kafka] (smallrye-kafka-consumer-thread-4) SRMSG18224: Executing consumer revoked re-balance listener for group 'opensearch-manager'
+2025-11-03 20:45:45,458 INFO  [io.sma.rea.mes.kafka] (smallrye-kafka-consumer-thread-5) SRMSG18224: Executing consumer revoked re-balance listener for group 'opensearch-manager'
+2025-11-03 20:45:45,535 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-2) [Producer clientId=producer-2] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+2025-11-03 20:45:45,535 WARN  [org.apa.kaf.cli.NetworkClient] (kafka-producer-network-thread | producer-2) [Producer clientId=producer-2] Bootstrap broker localhost:9092 (id: -1 rack: null isFenced: false) disconnected
+2025-11-03 20:45:45,640 INFO  [io.sma.rea.mes.kafka] (smallrye-kafka-consumer-thread-6) SRMSG18224: Executing consumer revoked re-balance listener for group 'opensearch-manager'
+2025-11-03 20:45:45,956 INFO  [io.pip.dyn.grp.cli.ChannelManager] (Test worker) Shutting down 0 cached gRPC channels on application exit...
+2025-11-03 20:45:45,960 INFO  [io.pip.dyn.grp.cli.ChannelManager] (Test worker) ChannelManager cleanup complete.
+2025-11-03 20:45:45,965 INFO  [io.quarkus] (Test worker) opensearch-manager-test stopped in 1.698s
+</pre>
+<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="class-stdout">Copy</button>
+</span>
+</div>
+<div class="tab">
+<h2>Standard error</h2>
+<span class="code">
+<pre id="class-stderr">java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:375)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:292)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:60)
+	at io.quarkus.test.junit.AppMakerHelper.getStartupAction(AppMakerHelper.java:253)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getOrCreateRuntimeClassLoader(FacadeClassLoader.java:587)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getQuarkusClassLoader(FacadeClassLoader.java:484)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.loadClass(FacadeClassLoader.java:366)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:547)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.loadClass(JUnitPlatformTestClassProcessor.java:184)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.access$100(JUnitPlatformTestClassProcessor.java:62)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:120)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:110)
+	at org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestClassProcessor.processTestClass(AbstractJUnitTestClassProcessor.java:61)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:54)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.processTestClass(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:177)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+Caused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.builder.Execution.run(Execution.java:139)
+	at io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:78)
+	at io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:160)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:371)
+	... 31 more
+Caused by: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:375)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:292)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:60)
+	at io.quarkus.test.junit.AppMakerHelper.getStartupAction(AppMakerHelper.java:253)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getOrCreateRuntimeClassLoader(FacadeClassLoader.java:587)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getQuarkusClassLoader(FacadeClassLoader.java:484)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.loadClass(FacadeClassLoader.java:366)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:547)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.loadClass(JUnitPlatformTestClassProcessor.java:184)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.access$100(JUnitPlatformTestClassProcessor.java:62)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:120)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:110)
+	at org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestClassProcessor.processTestClass(AbstractJUnitTestClassProcessor.java:61)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:54)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.processTestClass(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:177)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+Caused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.builder.Execution.run(Execution.java:139)
+	at io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:78)
+	at io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:160)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:371)
+	... 31 more
+Caused by: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:375)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:292)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:60)
+	at io.quarkus.test.junit.AppMakerHelper.getStartupAction(AppMakerHelper.java:253)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getOrCreateRuntimeClassLoader(FacadeClassLoader.java:587)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getQuarkusClassLoader(FacadeClassLoader.java:484)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.loadClass(FacadeClassLoader.java:366)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:547)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.loadClass(JUnitPlatformTestClassProcessor.java:184)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.access$100(JUnitPlatformTestClassProcessor.java:62)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:120)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:110)
+	at org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestClassProcessor.processTestClass(AbstractJUnitTestClassProcessor.java:61)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:54)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.processTestClass(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:177)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+Caused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.builder.Execution.run(Execution.java:139)
+	at io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:78)
+	at io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:160)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:371)
+	... 31 more
+Caused by: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+java.lang.RuntimeException: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:375)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:292)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.createInitialRuntimeApplication(AugmentActionImpl.java:60)
+	at io.quarkus.test.junit.AppMakerHelper.getStartupAction(AppMakerHelper.java:253)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getOrCreateRuntimeClassLoader(FacadeClassLoader.java:587)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.getQuarkusClassLoader(FacadeClassLoader.java:484)
+	at io.quarkus.test.junit.classloading.FacadeClassLoader.loadClass(FacadeClassLoader.java:366)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:547)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.loadClass(JUnitPlatformTestClassProcessor.java:184)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.access$100(JUnitPlatformTestClassProcessor.java:62)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:120)
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.execute(JUnitPlatformTestClassProcessor.java:110)
+	at org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestClassProcessor.processTestClass(AbstractJUnitTestClassProcessor.java:61)
+	at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:54)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
+	at jdk.proxy1/jdk.proxy1.$Proxy4.processTestClass(Unknown Source)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$2.run(TestWorker.java:177)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+Caused by: io.quarkus.builder.BuildException: Build failure: Build failed due to errors
+	[error]: Build step io.quarkus.arc.deployment.ArcProcessor#generateResources threw an exception: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+
+	at io.quarkus.builder.Execution.run(Execution.java:139)
+	at io.quarkus.builder.BuildExecutionBuilder.execute(BuildExecutionBuilder.java:78)
+	at io.quarkus.deployment.QuarkusAugmentor.run(QuarkusAugmentor.java:160)
+	at io.quarkus.runner.bootstrap.AugmentActionImpl.runAugment(AugmentActionImpl.java:371)
+	... 31 more
+Caused by: jakarta.enterprise.inject.spi.DeploymentException: Found 7 deployment problems: 
+[1] The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+[2] The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[3] The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[4] The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[5] The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[6] The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+[7] The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+	at io.quarkus.arc.processor.BeanDeployment.processErrors(BeanDeployment.java:1642)
+	at io.quarkus.arc.processor.BeanProcessor.processValidationErrors(BeanProcessor.java:198)
+	at io.quarkus.arc.deployment.ArcProcessor.generateResources(ArcProcessor.java:521)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:735)
+	at io.quarkus.deployment.ExtensionLoader$3.execute(ExtensionLoader.java:872)
+	at io.quarkus.builder.BuildContext.run(BuildContext.java:255)
+	at org.jboss.threads.ContextHandler$1.runWith(ContextHandler.java:18)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.doRunWith(EnhancedQueueExecutor.java:2651)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2630)
+	at org.jboss.threads.EnhancedQueueExecutor.runThreadBody(EnhancedQueueExecutor.java:1622)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1589)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+	at org.jboss.threads.JBossThread.run(JBossThread.java:501)
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'repository-document-events-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'drive-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'graph-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'module-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'pipedoc-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-request-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+	Suppressed: io.smallrye.reactive.messaging.providers.wiring.WiringException: The channel 'process-response-updates-in' is configured with an unknown connector (smallrye-in-memory)
+		at io.quarkus.smallrye.reactivemessaging.deployment.WiringProcessor.autoConfigureConnectorForOrphansAndProduceManagedChannels(WiringProcessor.java:402)
+		... 10 more
+Exception in thread &quot;vert.x-internal-blocking-1&quot; java.lang.IllegalAccessError: module java.base does not open java.lang to unnamed module @240e61; to use the thread-local-reset capability on Java 24 or later, use this JVM option: --add-opens java.base/java.lang=ALL-UNNAMED
+	at org.jboss.threads.JDKSpecific$ThreadAccess.&lt;clinit&gt;(JDKSpecific.java:32)
+	at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:13)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Exception in thread &quot;executor-thread-1&quot; java.lang.NoClassDefFoundError: Could not initialize class org.jboss.threads.JDKSpecific$ThreadAccess
+	at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:13)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.lang.ExceptionInInitializerError: Exception java.lang.IllegalAccessError: module java.base does not open java.lang to unnamed module @240e61; to use the thread-local-reset capability on Java 24 or later, use this JVM option: --add-opens java.base/java.lang=ALL-UNNAMED [in thread &quot;vert.x-internal-blocking-1&quot;]
+	at org.jboss.threads.JDKSpecific$ThreadAccess.&lt;clinit&gt;(JDKSpecific.java:32)
+	... 3 more
+</pre>
+<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="class-stderr">Copy</button>
+</span>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="https://www.gradle.org">Gradle 9.2.0</a> at Nov 3, 2025, 8:45:46 PM</p>
+</div>
+</div>
+</body>
+</html>

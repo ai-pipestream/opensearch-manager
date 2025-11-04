@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.pipeline.schemamanager.Strategy1ManagerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-11-04T01:45:44.250Z" hostname="krick" time="0.016">
+  <properties/>
+  <testcase name="shouldDetermineEmbeddingsFieldNameByDimension()" classname="io.pipeline.schemamanager.Strategy1ManagerTest" time="0.002"/>
+  <testcase name="shouldCreateOpenSearchDocumentWithNestedEmbeddings()" classname="io.pipeline.schemamanager.Strategy1ManagerTest" time="0.01"/>
+  <testcase name="shouldCreateVectorFieldDefinition()" classname="io.pipeline.schemamanager.Strategy1ManagerTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
