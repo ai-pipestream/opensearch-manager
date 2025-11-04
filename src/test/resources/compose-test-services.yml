@@ -1,0 +1,177 @@
+# Test infrastructure services - works in both local and CI/DinD environments
+# Uses init-db service approach to avoid bind mount issues in Docker-in-Docker
+
+name: pipeline-test-services
+
+networks:
+  pipeline-test-network:
+    driver: bridge
+
+volumes:
+  mysql_test_data:
+    driver: local
+  opensearch_test_data:
+    driver: local
+
+services:
+  # MySQL instance for tests (optimized for speed)
+  mysql-test:
+    container_name: pipeline-mysql-test
+    image: mysql:8.0
+    networks:
+      - pipeline-test-network
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: pipeline_account_test
+      MYSQL_USER: pipeline
+      MYSQL_PASSWORD: password
+    command:
+      # Performance optimizations for test environment (NOT for production!)
+      - --innodb-flush-log-at-trx-commit=0
+      - --innodb-doublewrite=0
+      - --skip-log-bin
+      - --performance-schema=0
+      - --innodb-buffer-pool-size=256M
+    ports:
+      - "3307:3306"  # Test port (dev uses 3306)
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+    labels:
+      # Quarkus devservices label to prevent automatic MySQL devservice creation
+      quarkus-dev-service-mysql: test
+      # Wait for MySQL to be ready before considering service started
+      io.quarkus.devservices.compose.wait_for.logs: ".*ready for connections.*"
+      # Map MySQL JDBC URL to datasource property
+      io.quarkus.devservices.compose.config_map.jdbc_url: quarkus.datasource.jdbc.url
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # Init service to create Apicurio database (schema auto-created by Apicurio)
+  # This approach works in both local and CI/DinD environments
+  # Runs in parallel with Apicurio startup - Apicurio will wait for DB to be ready
+  init-db:
+    image: mysql:8.0
+    depends_on:
+      mysql-test:
+        condition: service_healthy
+    command: >
+      bash -c "
+      until mysql -h mysql-test -u root -prootpassword -e 'SELECT 1' >/dev/null 2>&1; do
+        echo 'Waiting for MySQL...';
+        sleep 1;
+      done;
+      mysql -h mysql-test -u root -prootpassword -e \"
+      CREATE DATABASE IF NOT EXISTS apicurio_registry;
+      CREATE DATABASE IF NOT EXISTS pipeline_connector_test;
+      GRANT ALL PRIVILEGES ON apicurio_registry.* TO 'pipeline'@'%';
+      GRANT ALL PRIVILEGES ON pipeline_connector_test.* TO 'pipeline'@'%';
+      FLUSH PRIVILEGES;
+      \"
+      "
+    networks:
+      - pipeline-test-network
+    labels:
+      # Mark as Quarkus devservice so it's recognized by compose devservices
+      quarkus-dev-service-init-db: test
+
+  # Redpanda for Kafka-compatible messaging (test instance)
+  kafka-test:
+    container_name: pipeline-kafka-test
+    image: redpandadata/redpanda:latest
+    hostname: kafka-test
+    networks:
+      - pipeline-test-network
+    command:
+      - redpanda start
+      - --smp 1
+      - --overprovisioned
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:9094
+      # Docker bridge gateway: 172.17.0.1 (Linux) or host.docker.internal (Mac/Windows)
+      # Default to 172.17.0.1 for Linux/DinD environments
+      - --advertise-kafka-addr internal://kafka-test:9092,external://${DOCKER_GATEWAY_HOST:-172.17.0.1}:9095
+    ports:
+      - "9095:9094"     # External port for localhost access
+    labels:
+      quarkus-dev-service-kafka: test
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]
+      interval: 3s
+      timeout: 10s
+      retries: 10
+      start_period: 5s
+
+  # Apicurio Registry for schema management (test instance)
+  apicurio-registry-test:
+    container_name: pipeline-apicurio-registry-test
+    image: apicurio/apicurio-registry:3.0.11
+    networks:
+      - pipeline-test-network
+    ports:
+      - "8082:8080"     # Test port (dev uses 8081)
+    depends_on:
+      mysql-test:
+        condition: service_healthy
+    environment:
+      APICURIO_DATASOURCE_URL: 'jdbc:mysql://mysql-test:3306/apicurio_registry'
+      APICURIO_DATASOURCE_USERNAME: 'pipeline'
+      APICURIO_DATASOURCE_PASSWORD: 'password'
+      # Auto-initialize schema (default: true, but explicit for clarity)
+      APICURIO_SQL_INIT: 'true'
+      APICURIO_STORAGE_KIND: 'sql'
+      APICURIO_STORAGE_SQL_KIND: 'mysql'
+      QUARKUS_HTTP_PORT: 8080
+      QUARKUS_LOG_LEVEL: 'INFO'
+      LOG_LEVEL: 'INFO'
+      QUARKUS_HTTP_CORS_ORIGINS: '*'
+      QUARKUS_PROFILE: 'prod'
+    labels:
+      # Wait for Apicurio to be ready before considering service started
+      io.quarkus.devservices.compose.wait_for.logs: ".*Listening on.*"
+      # Map the exposed port to apicurio registry URL property
+      # Port 8080 inside container is exposed as 8082 on host (see ports: "8082:8080")
+      # Quarkus will automatically use the host-side port (8082) for this mapping
+      io.quarkus.devservices.compose.config_map.8080: mp.messaging.connector.smallrye-kafka.apicurio.registry.url
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # OpenSearch for search and indexing (test instance)
+  opensearch-test:
+    container_name: pipeline-opensearch-test
+    image: opensearchproject/opensearch:3.3.2
+    networks:
+      - pipeline-test-network
+    ports:
+      - "9200:9200"     # REST API
+      - "9600:9600"     # Performance Analyzer
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_SECURITY_PLUGIN=true"  # Disable security for testing
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch_test_data:/usr/share/opensearch/data
+    labels:
+      quarkus-dev-service-opensearch: test
+      io.quarkus.devservices.compose.wait_for.logs: ".*Node.*started.*"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s

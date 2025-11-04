@@ -1,0 +1,138 @@
+plugins {
+    alias(libs.plugins.java)
+    alias(libs.plugins.quarkus)
+    alias(libs.plugins.maven.publish)
+}
+
+
+
+dependencies {
+    implementation 'io.quarkus:quarkus-container-image-docker'
+    implementation platform('io.pipeline:pipeline-bom:1.0.0-SNAPSHOT')
+    implementation 'io.quarkus:quarkus-grpc'
+    implementation 'io.quarkus:quarkus-arc'
+    implementation 'io.quarkus:quarkus-smallrye-health'
+    implementation 'io.quarkus:quarkus-smallrye-stork'
+    implementation 'io.quarkus:quarkus-messaging-kafka'
+    
+    // REST API dependencies
+    implementation 'io.quarkus:quarkus-rest'
+    implementation 'io.quarkus:quarkus-rest-jackson'
+    implementation 'io.quarkus:quarkus-smallrye-openapi'
+    implementation 'io.quarkus:quarkus-hibernate-validator'
+    
+    // Service Discovery dependencies for Consul
+    implementation 'io.smallrye.stork:stork-service-discovery-consul'
+    implementation 'io.smallrye.reactive:smallrye-mutiny-vertx-consul-client'
+    implementation 'io.smallrye.stork:stork-service-registration-consul'
+    implementation 'io.pipeline:dynamic-grpc-registration-clients'
+
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.rest-assured:rest-assured'
+    testImplementation("org.opensearch:opensearch-testcontainers:3.0.2")
+    testImplementation libs.json.schema.validator
+    testImplementation libs.testcontainers
+    testImplementation("org.testcontainers:kafka:1.21.3")
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.awaitility:awaitility'
+
+    implementation 'io.pipeline:grpc-stubs:1.0.0-SNAPSHOT'
+    implementation 'io.pipeline:pipeline-commons'
+    implementation 'io.pipeline:pipeline-api'
+    implementation 'io.pipeline:data-util'
+    implementation 'io.pipeline:dynamic-grpc'
+    implementation libs.opensearch.java
+    implementation libs.httpclient5
+    implementation libs.commons.lang3
+    
+    // Apicurio Registry v3 protobuf serde for Kafka
+    implementation libs.apicurio.registry.protobuf.serde
+}
+
+group 'io.pipeline.application'
+version '1.0.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+test {
+    systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
+}
+compileJava {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
+
+compileTestJava {
+    options.encoding = 'UTF-8'
+}
+
+// Publishing configuration
+publishing {
+    publications {
+        //noinspection GroovyAssignabilityCheck
+        maven(MavenPublication) { publication ->
+            from components.java
+            //noinspection GroovyAssignabilityCheck
+            artifact(file("${buildDir}/quarkus-app/quarkus-run.jar")) { artifact ->
+                artifact.classifier = 'runner'
+                artifact.builtBy tasks.named('quarkusBuild')
+            }
+            pom { pom ->
+                name.set('OpenSearch Manager Service')
+                description.set('OpenSearch indexing and search management service for the Pipeline platform')
+                url.set('https://github.com/io-pipeline/opensearch-manager')
+
+                licenses {
+                    license {
+                        name.set('Apache License 2.0')
+                        url.set('https://www.apache.org/licenses/LICENSE-2.0')
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set('krickert')
+                        email.set('krickert@rokkon.com')
+                        name.set('Pipeline Engine Team')
+                    }
+                }
+
+                scm {
+                    connection.set('scm:git:git://github.com/io-pipeline/opensearch-manager.git')
+                    developerConnection.set('scm:git:ssh://github.com/io-pipeline/opensearch-manager.git')
+                    url.set('https://github.com/io-pipeline/opensearch-manager')
+                }
+            }
+        }
+    }
+
+    repositories {
+        // Publish to Maven Local for development
+        mavenLocal()
+
+        // Publish to Reposilite (primary artifact repository)
+        maven {
+            name = "Reposilite"
+            url = uri(version.toString().endsWith('-SNAPSHOT')
+                ? "https://maven.rokkon.com/snapshots"
+                : "https://maven.rokkon.com/releases")
+            credentials {
+                username = project.findProperty("reposilite.user") ?: System.getenv("REPOS_USER") ?: "admin"
+                password = project.findProperty("reposilite.token") ?: System.getenv("REPOS_PAT")
+            }
+        }
+
+        // Publish to Gitea Maven registry (backup)
+        maven {
+            name = "Gitea"
+            url = uri("https://git.rokkon.com/api/packages/io-pipeline/maven")
+            credentials {
+                username = project.findProperty("gitea.user") ?: System.getenv("GIT_USER") ?: "krickert"
+                password = project.findProperty("gitea.token") ?: System.getenv("GIT_TOKEN")
+            }
+        }
+    }
+}
