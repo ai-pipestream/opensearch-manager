@@ -7,6 +7,9 @@ plugins {
 
 
 dependencies {
+    // Pipeline Dev Services extension (automatic compose infrastructure setup)
+    implementation 'io.pipeline:quarkus-pipeline-devservices:1.0.0-SNAPSHOT'
+
     implementation 'io.quarkus:quarkus-container-image-docker'
     implementation platform('io.pipeline:pipeline-bom:1.0.0-SNAPSHOT')
     implementation 'io.quarkus:quarkus-grpc'
