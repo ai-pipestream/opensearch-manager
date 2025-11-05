@@ -4,15 +4,19 @@ plugins {
     alias(libs.plugins.maven.publish)
 }
 
+repositories {
+    mavenCentral()
+}
 
 
 dependencies {
-    // Pipeline Dev Services extension (automatic compose infrastructure setup)
-    implementation 'io.pipeline:quarkus-pipeline-devservices:1.0.0-SNAPSHOT'
+
 
     implementation 'io.quarkus:quarkus-container-image-docker'
     implementation platform('io.pipeline:pipeline-bom:1.0.0-SNAPSHOT')
-    implementation 'io.quarkus:quarkus-grpc'
+    implementation('io.quarkus:quarkus-grpc') {
+        exclude group: 'io.quarkus', module: 'quarkus-grpc-stubs'
+    }
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-smallrye-health'
     implementation 'io.quarkus:quarkus-smallrye-stork'
@@ -30,14 +34,6 @@ dependencies {
     implementation 'io.smallrye.stork:stork-service-registration-consul'
     implementation 'io.pipeline:dynamic-grpc-registration-clients'
 
-    testImplementation 'io.quarkus:quarkus-junit5'
-    testImplementation 'io.rest-assured:rest-assured'
-    testImplementation 'org.opensearch:opensearch-testcontainers:4.0.0'
-    testImplementation libs.json.schema.validator
-    testImplementation libs.testcontainers
-    testImplementation 'org.testcontainers:kafka:1.21.3'
-    testImplementation 'org.mockito:mockito-core'
-    testImplementation 'org.awaitility:awaitility'
 
     implementation 'io.pipeline:grpc-stubs:1.0.0-SNAPSHOT'
     implementation 'io.pipeline:pipeline-commons'
@@ -115,6 +111,7 @@ publishing {
     repositories {
         // Publish to Maven Local for development
         mavenLocal()
+        mavenCentral()
 
         // Publish to Reposilite (primary artifact repository)
         maven {
@@ -134,7 +131,7 @@ publishing {
             url = uri("https://git.rokkon.com/api/packages/io-pipeline/maven")
             credentials {
                 username = project.findProperty("gitea.user") ?: System.getenv("GIT_USER") ?: "krickert"
-                password = project.findProperty("gitea.token") ?: System.getenv("GIT_TOKEN")
+                password = project.findProperty("gitea.token") ?: System.getenv("GIT_PAT")
             }
         }
     }

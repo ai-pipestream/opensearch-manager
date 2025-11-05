@@ -15,7 +15,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
-@QuarkusTestResource(OpenSearchTestResource.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IndexAnyDocumentTest {
 
