@@ -1,6 +1,6 @@
-package io.pipeline.schemamanager;
+package ai.pipestream.schemamanager;
 
-import io.pipeline.opensearch.v1.*;
+import ai.pipestream.opensearch.v1.*;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;

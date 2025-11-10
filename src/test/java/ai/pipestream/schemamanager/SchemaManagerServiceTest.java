@@ -1,14 +1,10 @@
-package io.pipeline.schemamanager;
+package ai.pipestream.schemamanager;
 
-import io.pipeline.opensearch.v1.*;
+import ai.pipestream.opensearch.v1.*;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-
-import jakarta.inject.Inject;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;

@@ -1,4 +1,4 @@
-package io.pipeline.schemamanager.opensearch;
+package ai.pipestream.schemamanager.opensearch;
 
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -17,7 +17,7 @@ import org.opensearch.client.opensearch.indices.IndexSettings;
 
 import java.io.IOException;
 
-import static io.pipeline.schemamanager.opensearch.IndexConstants.Index;
+import static ai.pipestream.schemamanager.opensearch.IndexConstants.Index;
 
 @ApplicationScoped
 public class IndexInitializer {

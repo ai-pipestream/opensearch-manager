@@ -1,22 +1,21 @@
-package io.pipeline.schemamanager.opensearch;
+package ai.pipestream.schemamanager.opensearch;
 
 import com.google.protobuf.util.JsonFormat;
-import io.pipeline.config.v1.*; // Includes all enums and messages
-import io.pipeline.repository.filesystem.Drive;
-import io.pipeline.repository.filesystem.Node;
-import io.pipeline.repository.v1.PipeDocUpdateNotification;
-import io.pipeline.repository.v1.ProcessRequestUpdateNotification;
-import io.pipeline.repository.v1.ProcessResponseUpdateNotification;
+import ai.pipestream.config.v1.*; // Includes all enums and messages
+import ai.pipestream.repository.filesystem.Drive;
+import ai.pipestream.repository.filesystem.Node;
+import ai.pipestream.repository.v1.PipeDocUpdateNotification;
+import ai.pipestream.repository.v1.ProcessRequestUpdateNotification;
+import ai.pipestream.repository.v1.ProcessResponseUpdateNotification;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 
-import java.io.IOException;
 import java.util.*;
 
-import static io.pipeline.schemamanager.opensearch.IndexConstants.*;
+import static ai.pipestream.schemamanager.opensearch.IndexConstants.*;
 
 /**
  * Service for indexing repository entities into OpenSearch

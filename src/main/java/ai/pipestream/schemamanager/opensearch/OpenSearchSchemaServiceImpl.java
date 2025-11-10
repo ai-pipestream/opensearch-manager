@@ -1,7 +1,7 @@
-package io.pipeline.schemamanager.opensearch;
+package ai.pipestream.schemamanager.opensearch;
 
-import io.pipeline.opensearch.v1.KnnMethodDefinition;
-import io.pipeline.opensearch.v1.VectorFieldDefinition;
+import ai.pipestream.opensearch.v1.KnnMethodDefinition;
+import ai.pipestream.opensearch.v1.VectorFieldDefinition;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;

@@ -1,8 +1,8 @@
-package io.pipeline.schemamanager.kafka;
+package ai.pipestream.schemamanager.kafka;
 
-import io.pipeline.opensearch.v1.MutinyOpenSearchManagerServiceGrpc;
-import io.pipeline.repository.filesystem.Drive;
-import io.pipeline.repository.filesystem.DriveUpdateNotification;
+import ai.pipestream.opensearch.v1.MutinyOpenSearchManagerServiceGrpc;
+import ai.pipestream.repository.filesystem.Drive;
+import ai.pipestream.repository.filesystem.DriveUpdateNotification;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -21,7 +21,7 @@ import java.util.Properties;
 import static org.mockito.ArgumentMatchers.any;
 
 @QuarkusTest
-@QuarkusTestResource(OpenSearchTestResource.class)
+// @QuarkusTestResource(OpenSearchTestResource.class)  // Now using compose services
 public class RepositoryUpdateConsumerTest {
 
     @Inject

@@ -1,4 +1,6 @@
 # Test infrastructure services for opensearch-manager
+# Uses Redpanda for Kafka-compatible messaging in test environment
+
 name: pipeline-test-services
 
 networks:
@@ -18,7 +20,7 @@ services:
       - pipeline-test-network
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: pipeline_account_test
+      MYSQL_DATABASE: pipeline_opensearch_test
       MYSQL_USER: pipeline
       MYSQL_PASSWORD: password
     ports:
@@ -48,18 +50,25 @@ services:
         echo 'Waiting for MySQL...';
         sleep 1;
       done;
-      mysql -h mysql-test -u root -prootpassword -e "
+      mysql -h mysql-test -u root -prootpassword -e \"
       CREATE DATABASE IF NOT EXISTS apicurio_registry;
       GRANT ALL PRIVILEGES ON apicurio_registry.* TO 'pipeline'@'%';
       FLUSH PRIVILEGES;
-      "
+      \" &&
+      echo 'Database initialized successfully' &&
+      sleep infinity
       "
     networks:
       - pipeline-test-network
     labels:
       quarkus-dev-service-init-db: test
+    healthcheck:
+      test: ["CMD", "echo", "ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 1
 
-  # Redpanda for Kafka-compatible messaging
+  # Redpanda for Kafka-compatible messaging (test environment)
   kafka-test:
     container_name: pipeline-kafka-test
     image: redpandadata/redpanda:latest
@@ -75,8 +84,7 @@ services:
     ports:
       - "9095:9094"
     labels:
-      quarkus-dev-service-kafka: test
-      io.quarkus.devservices.compose.config_map.9094: kafka.bootstrap.servers
+      quarkus-dev-service-kafka: shared
     healthcheck:
       test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]
       interval: 3s
@@ -84,7 +92,7 @@ services:
       retries: 10
       start_period: 5s
 
-  # Apicurio Registry for schema management
+  # Apicurio Registry for schema management (test instance)
   apicurio-registry-test:
     container_name: pipeline-apicurio-registry-test
     image: apicurio/apicurio-registry:3.0.11
@@ -93,7 +101,9 @@ services:
     ports:
       - "8082:8080"
     depends_on:
-      mysql-test:
+      init-db:
+        condition: service_healthy
+      kafka-test:
         condition: service_healthy
     environment:
       APICURIO_DATASOURCE_URL: 'jdbc:mysql://mysql-test:3306/apicurio_registry'
@@ -115,9 +125,11 @@ services:
       start_period: 30s
 
   # OpenSearch instance for tests
-  opensearch:
-    image: opensearchproject/opensearch:3.3.2
+  opensearch-test:
     container_name: opensearch-test
+    image: opensearchproject/opensearch:3.3.2
+    networks:
+      - pipeline-test-network
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
@@ -133,7 +145,13 @@ services:
     ports:
       - "9201:9200"
       - "9601:9600"
-    networks:
-      - pipeline-test-network
     labels:
-      io.quarkus.devservices.compose.config_map.9200: opensearch.hosts
+      quarkus-dev-service-opensearch: test
+      io.quarkus.devservices.compose.wait_for.logs: ".*Node started.*"
+      io.quarkus.devservices.compose.config_map.opensearch: opensearch.hosts
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 30s

@@ -2,54 +2,51 @@ plugins {
     alias(libs.plugins.java)
     alias(libs.plugins.quarkus)
     alias(libs.plugins.maven.publish)
+    id 'signing'
+    id 'com.gradleup.nmcp' version '1.2.0'
 }
 
-repositories {
-    mavenCentral()
-}
-
+def pipelineBomVersion = findProperty('pipelineBomVersion') ?: '0.1.2-SNAPSHOT'
 
 dependencies {
-
-
     implementation 'io.quarkus:quarkus-container-image-docker'
-    implementation platform('io.pipeline:pipeline-bom:1.0.0-SNAPSHOT')
-    implementation('io.quarkus:quarkus-grpc') {
-        exclude group: 'io.quarkus', module: 'quarkus-grpc-stubs'
-    }
-    implementation 'io.quarkus:quarkus-arc'
+    implementation platform("ai.pipestream:pipeline-bom:${pipelineBomVersion}")
+
+    // Core Quarkus dependencies
+    implementation libs.quarkus.arc
+    implementation libs.quarkus.rest
+    implementation libs.quarkus.rest.jackson
+    implementation libs.quarkus.grpc
     implementation 'io.quarkus:quarkus-smallrye-health'
     implementation 'io.quarkus:quarkus-smallrye-stork'
     implementation 'io.quarkus:quarkus-messaging-kafka'
-    
-    // REST API dependencies
-    implementation 'io.quarkus:quarkus-rest'
-    implementation 'io.quarkus:quarkus-rest-jackson'
-    implementation 'io.quarkus:quarkus-smallrye-openapi'
-    implementation 'io.quarkus:quarkus-hibernate-validator'
-    
-    // Service Discovery dependencies for Consul
+    implementation libs.apicurio.registry.protobuf.serde
+
+    // Service discovery and registration with Consul
     implementation 'io.smallrye.stork:stork-service-discovery-consul'
-    implementation 'io.smallrye.reactive:smallrye-mutiny-vertx-consul-client'
     implementation 'io.smallrye.stork:stork-service-registration-consul'
-    implementation 'io.pipeline:dynamic-grpc-registration-clients'
+    implementation 'io.smallrye.reactive:smallrye-mutiny-vertx-consul-client'
 
+    // Pipestream platform libraries (managed via BOM/catalog)
+    implementation libs.pipestream.compose.devservices
+    implementation libs.pipestream.grpc.stubs
+    implementation libs.pipestream.commons
+    implementation libs.pipestream.dynamic.grpc
+    implementation libs.pipestream.dynamic.grpc.registration.clients
 
-    implementation 'io.pipeline:grpc-stubs:1.0.0-SNAPSHOT'
-    implementation 'io.pipeline:pipeline-commons'
-    implementation 'io.pipeline:pipeline-api'
-    implementation 'io.pipeline:data-util'
-    implementation 'io.pipeline:dynamic-grpc'
-    implementation 'org.opensearch.client:opensearch-java:3.3.0'
+    // OpenSearch client and supporting utilities
+    implementation libs.opensearch.java
     implementation libs.httpclient5
     implementation libs.commons.lang3
-    
-    // Apicurio Registry v3 protobuf serde for Kafka
-    implementation libs.apicurio.registry.protobuf.serde
+
+    // Testing
+    testImplementation libs.quarkus.junit5
+    testImplementation libs.rest.assured
+    testImplementation libs.pipestream.grpc.wiremock
 }
 
-group 'io.pipeline.application'
-version '1.0.0-SNAPSHOT'
+group = 'ai.pipestream'
+version = pipelineBomVersion
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -71,18 +68,12 @@ compileTestJava {
 // Publishing configuration
 publishing {
     publications {
-        //noinspection GroovyAssignabilityCheck
         maven(MavenPublication) { publication ->
             from components.java
-            //noinspection GroovyAssignabilityCheck
-            artifact(file("${buildDir}/quarkus-app/quarkus-run.jar")) { artifact ->
-                artifact.classifier = 'runner'
-                artifact.builtBy tasks.named('quarkusBuild')
-            }
-            pom { pom ->
-                name.set('OpenSearch Manager Service')
-                description.set('OpenSearch indexing and search management service for the Pipeline platform')
-                url.set('https://github.com/io-pipeline/opensearch-manager')
+            pom {
+                name.set('OpenSearch Manager')
+                description.set('OpenSearch indexing and schema management service for the Pipestream platform')
+                url.set('https://github.com/ai-pipestream/opensearch-manager')
 
                 licenses {
                     license {
@@ -94,56 +85,52 @@ publishing {
                 developers {
                     developer {
                         id.set('krickert')
-                        email.set('krickert@rokkon.com')
-                        name.set('Pipeline Engine Team')
+                        name.set('Pipestream Platform Team')
                     }
                 }
 
                 scm {
-                    connection.set('scm:git:git://github.com/io-pipeline/opensearch-manager.git')
-                    developerConnection.set('scm:git:ssh://github.com/io-pipeline/opensearch-manager.git')
-                    url.set('https://github.com/io-pipeline/opensearch-manager')
+                    connection.set('scm:git:git://github.com/ai-pipestream/opensearch-manager.git')
+                    developerConnection.set('scm:git:ssh://github.com/ai-pipestream/opensearch-manager.git')
+                    url.set('https://github.com/ai-pipestream/opensearch-manager')
                 }
             }
         }
     }
-
     repositories {
         // Publish to Maven Local for development
         mavenLocal()
-
-        // Publish to Reposilite (primary artifact repository)
-        maven {
-            name = "Reposilite"
-            url = uri(version.toString().endsWith('-SNAPSHOT')
-                ? "https://maven.rokkon.com/snapshots"
-                : "https://maven.rokkon.com/releases")
-            credentials {
-                username = project.findProperty("reposilite.user") ?: System.getenv("REPOS_USER") ?: "admin"
-                password = project.findProperty("reposilite.token") ?: System.getenv("REPOS_PAT")
-            }
-        }
-
-        // Publish to Gitea Maven registry (backup)
-        maven {
-            name = "Gitea"
-            url = uri("https://git.rokkon.com/api/packages/io-pipeline/maven")
-            credentials {
-                username = project.findProperty("gitea.user") ?: System.getenv("GIT_USER") ?: "krickert"
-                password = project.findProperty("gitea.token") ?: System.getenv("GIT_PAT")
-            }
-        }
-
-        // Publish to GitHub Packages (when in GitHub Actions)
-        if (System.getenv("GITHUB_ACTOR") != null) {
+        def githubToken = providers.environmentVariable("GITHUB_TOKEN")
+        if (githubToken.isPresent()) {
             maven {
                 name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/io-pipeline/opensearch-manager")
+                url = uri("https://maven.pkg.github.com/ai-pipestream/opensearch-manager")
                 credentials {
-                    username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GITHUB_TOKEN")
+                    username = providers.environmentVariable("GITHUB_ACTOR").getOrElse("github-actions")
+                    password = githubToken.get()
+                }
+                mavenContent {
+                    releasesOnly()
                 }
             }
         }
+    }
+}
+
+signing {
+    def signingKey = System.getenv("GPG_SIGNING_KEY")
+    def signingPassword = System.getenv("GPG_SIGNING_PASSPHRASE")
+
+    if (signingKey && signingPassword) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign publishing.publications.maven
+    }
+}
+
+nmcp {
+    publishAllPublicationsToCentralPortal {
+        username = providers.environmentVariable("MAVEN_CENTRAL_USERNAME")
+        password = providers.environmentVariable("MAVEN_CENTRAL_PASSWORD")
+        publishingType = "AUTOMATIC"
     }
 }

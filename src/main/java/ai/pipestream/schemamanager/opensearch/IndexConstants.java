@@ -1,4 +1,4 @@
-package io.pipeline.schemamanager.opensearch;
+package ai.pipestream.schemamanager.opensearch;
 
 /**
  * Constants for OpenSearch indices and field names

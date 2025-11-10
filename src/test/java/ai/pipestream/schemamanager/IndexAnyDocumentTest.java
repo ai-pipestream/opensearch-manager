@@ -1,15 +1,12 @@
-package io.pipeline.schemamanager;
+package ai.pipestream.schemamanager;
 
-import io.pipeline.opensearch.v1.*;
+import ai.pipestream.opensearch.v1.*;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.common.QuarkusTestResource;
 import com.google.protobuf.Any;
 import com.google.protobuf.StringValue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-
-import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;

@@ -1,7 +1,7 @@
-package io.pipeline.schemamanager;
+package ai.pipestream.schemamanager;
 
-import io.pipeline.schemamanager.opensearch.OpenSearchSchemaService;
-import io.pipeline.opensearch.v1.*;
+import ai.pipestream.schemamanager.opensearch.OpenSearchSchemaService;
+import ai.pipestream.opensearch.v1.*;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
 import com.google.protobuf.util.JsonFormat;
@@ -295,7 +295,7 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
     public Uni<FilesystemMetaSearchResponse> searchFilesystemMeta(FilesystemMetaSearchRequest request) {
         LOG.infof("Searching filesystem metadata: drive=%s, query=%s", request.getDrive(), request.getQuery());
 
-        String index = io.pipeline.schemamanager.opensearch.IndexConstants.Index.REPOSITORY_PIPEDOCS.getIndexName();
+        String index = ai.pipestream.schemamanager.opensearch.IndexConstants.Index.REPOSITORY_PIPEDOCS.getIndexName();
         String queryText = request.getQuery() == null ? "" : request.getQuery();
         int pageSize = request.getPageSize() > 0 ? request.getPageSize() : 50;
 
