@@ -111,5 +111,7 @@ jobs:
             -Dquarkus.container-image.registry=ghcr.io \
             -Dquarkus.container-image.group=${{ github.repository_owner }} \
             -Dquarkus.container-image.name=opensearch-manager \
+            -Dquarkus.container-image.username=${{ github.actor }} \
+            -Dquarkus.container-image.password=${{ secrets.GH_DOCKER_BUILD_TOKEN }} \
             -Dquarkus.container-image.additional-tags=latest,${{ github.sha }} \
             --no-daemon
