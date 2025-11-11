@@ -16,11 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install docker compose plugin
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose-plugin
-          docker compose version
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -62,11 +59,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install docker compose plugin
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose-plugin
-          docker compose version
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
