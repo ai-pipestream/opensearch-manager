@@ -48,8 +48,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew publishAllPublicationsToGitHubPackagesRepository --no-daemon
 
+      - name: Check version for Maven Central
+        id: check_version
+        run: |
+          VERSION=$(./gradlew properties -q | grep "^version:" | awk '{print $2}')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [[ "$VERSION" == *"SNAPSHOT"* ]]; then
+            echo "is_snapshot=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_snapshot=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Publish to Maven Central
-        if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'SNAPSHOT')
+        if: github.ref == 'refs/heads/main' && steps.check_version.outputs.is_snapshot == 'false'
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
@@ -88,7 +99,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GH_PAT_PACKAGES }}
+          password: ${{ secrets.GH_DOCKER_BUILD_TOKEN }}
 
       - name: Build and push Docker image with Quarkus
         env:
