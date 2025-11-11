@@ -18,20 +18,73 @@ import java.util.*;
 import static ai.pipestream.schemamanager.opensearch.IndexConstants.*;
 
 /**
- * Service for indexing repository entities into OpenSearch
+ * Core service for indexing and deleting repository entities in OpenSearch.
+ *
+ * <p>This service provides comprehensive indexing capabilities for all entity types
+ * in the PipeStream repository system. It transforms protobuf messages into OpenSearch
+ * documents with enriched metadata and maintains indices for efficient querying.
+ *
+ * <p><strong>Supported Entity Types:</strong>
+ * <ul>
+ *   <li><strong>Filesystem Drives</strong> - Storage endpoints (S3, local, etc.)</li>
+ *   <li><strong>Filesystem Nodes</strong> - Files and folders with path hierarchy</li>
+ *   <li><strong>Modules</strong> - Processing module definitions</li>
+ *   <li><strong>PipeDocs</strong> - Document metadata with tags and embeddings</li>
+ *   <li><strong>Process Requests</strong> - Pipeline execution requests</li>
+ *   <li><strong>Process Responses</strong> - Pipeline execution results</li>
+ *   <li><strong>Graphs</strong> - Pipeline graph structures</li>
+ *   <li><strong>Graph Nodes</strong> - Individual nodes in pipeline graphs</li>
+ *   <li><strong>Graph Edges</strong> - Connections between graph nodes</li>
+ * </ul>
+ *
+ * <p><strong>Key Features:</strong>
+ * <ul>
+ *   <li>Reactive operations using {@link Uni} for non-blocking execution</li>
+ *   <li>Automatic metadata enrichment (path components, MIME categories, etc.)</li>
+ *   <li>Composite document IDs for hierarchical data (e.g., drive/nodeId)</li>
+ *   <li>Timestamp tracking (created, updated, indexed)</li>
+ *   <li>Tag and metadata support for all entity types</li>
+ *   <li>Protobuf-to-JSON conversion for simple indexing</li>
+ * </ul>
+ *
+ * <p>All index and delete operations return {@link Uni}{@code <Void>} and include
+ * comprehensive error logging for troubleshooting.
+ *
+ * @author PipeStream.ai
+ * @version 1.0
+ * @see IndexConstants
+ * @see org.opensearch.client.opensearch.OpenSearchAsyncClient
  */
 @ApplicationScoped
 public class OpenSearchIndexingService {
 
     private static final Logger LOG = Logger.getLogger(OpenSearchIndexingService.class);
 
+    /**
+     * Asynchronous OpenSearch client for executing index and delete operations.
+     * Injected via CDI.
+     */
     @Inject
     OpenSearchAsyncClient openSearchClient;
 
     // ========== FILESYSTEM DRIVE OPERATIONS ==========
 
     /**
-     * Index a filesystem drive with enriched metadata
+     * Indexes a filesystem drive with enriched metadata into OpenSearch.
+     *
+     * <p>This method creates a comprehensive document containing drive metadata
+     * including name, description, custom metadata, and timestamps. The document
+     * is indexed using the drive name as the document ID.
+     *
+     * <p>The indexed document includes:
+     * <ul>
+     *   <li>Basic fields: name, description</li>
+     *   <li>Custom metadata map</li>
+     *   <li>Timestamps: created_at (from drive), indexed_at (current time)</li>
+     * </ul>
+     *
+     * @param drive the Drive protobuf message to index
+     * @return a {@link Uni} that completes when indexing succeeds, or fails with an exception
      */
     public Uni<Void> indexDrive(Drive drive) {
         LOG.infof("Indexing drive using Map approach: %s", drive.getName());
@@ -67,7 +120,13 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Delete a filesystem drive from the index
+     * Deletes a filesystem drive from the OpenSearch index.
+     *
+     * <p>This operation removes the drive document identified by the drive name
+     * from the filesystem-drives index.
+     *
+     * @param driveName the name of the drive to delete (used as document ID)
+     * @return a {@link Uni} that completes when deletion succeeds, or fails with an exception
      */
     public Uni<Void> deleteDrive(String driveName) {
         try {
@@ -86,7 +145,31 @@ public class OpenSearchIndexingService {
     // ========== FILESYSTEM NODE OPERATIONS ==========
 
     /**
-     * Index a filesystem node with enriched metadata including S3 info and path components
+     * Indexes a filesystem node with comprehensive enriched metadata.
+     *
+     * <p>This method creates a highly detailed document for files and folders, including:
+     * <ul>
+     *   <li><strong>Identity:</strong> node ID, name, drive, type (FILE/FOLDER)</li>
+     *   <li><strong>Hierarchy:</strong> path, path components for tree queries, parent path/ID, depth</li>
+     *   <li><strong>File metadata:</strong> size, MIME type, extension, category</li>
+     *   <li><strong>S3 metadata:</strong> lastModified, contentType, size (extensible)</li>
+     *   <li><strong>Payload info:</strong> has payload flag, type URL, class name, size</li>
+     *   <li><strong>UI fields:</strong> icon SVG, service type</li>
+     *   <li><strong>Custom data:</strong> metadata map</li>
+     *   <li><strong>Timestamps:</strong> created_at, updated_at, indexed_at</li>
+     * </ul>
+     *
+     * <p>The document ID is a composite key: {@code drive/nodeId} to ensure uniqueness
+     * across drives. Path components enable efficient hierarchical queries (e.g., find all
+     * descendants of a folder).
+     *
+     * <p><strong>Example path components:</strong><br>
+     * Path "/drive/documents/2024" becomes: ["/", "/drive", "/drive/documents", "/drive/documents/2024"]
+     *
+     * @param node the Node protobuf message to index
+     * @param drive the drive name this node belongs to
+     * @return a {@link Uni} that completes when indexing succeeds, or fails with an exception
+     * @see #buildPathComponents(String)
      */
     public Uni<Void> indexNode(Node node, String drive) {
         Map<String, Object> document = new HashMap<>();
@@ -193,7 +276,14 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Delete a filesystem node from the index
+     * Deletes a filesystem node from the OpenSearch index.
+     *
+     * <p>This operation removes the node document using the composite ID
+     * {@code drive/nodeId} from the filesystem-nodes index.
+     *
+     * @param nodeId the unique identifier of the node within the drive
+     * @param drive the drive name the node belongs to
+     * @return a {@link Uni} that completes when deletion succeeds, or fails with an exception
      */
     public Uni<Void> deleteNode(String nodeId, String drive) {
         String docId = drive + "/" + nodeId;
@@ -213,7 +303,18 @@ public class OpenSearchIndexingService {
     // ========== MODULE OPERATIONS ==========
 
     /**
-     * Index a module definition
+     * Indexes a processing module definition into OpenSearch.
+     *
+     * <p>This method creates a document containing module metadata including:
+     * <ul>
+     *   <li>Module ID and implementation name</li>
+     *   <li>gRPC service name for RPC calls</li>
+     *   <li>Visibility (PUBLIC, PRIVATE, etc.)</li>
+     *   <li>Timestamps: created_at, modified_at, indexed_at</li>
+     * </ul>
+     *
+     * @param module the ModuleDefinition protobuf message to index
+     * @return a {@link Uni} that completes when indexing succeeds, or fails with an exception
      */
     public Uni<Void> indexModule(ModuleDefinition module) {
         Map<String, Object> document = new HashMap<>();
@@ -246,7 +347,10 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Delete a module from the index
+     * Deletes a module definition from the OpenSearch index.
+     *
+     * @param moduleId the unique identifier of the module to delete
+     * @return a {@link Uni} that completes when deletion succeeds, or fails with an exception
      */
     public Uni<Void> deleteModule(String moduleId) {
         try {
@@ -265,7 +369,20 @@ public class OpenSearchIndexingService {
     // ========== PIPEDOC OPERATIONS ==========
 
     /**
-     * Index a PipeDoc
+     * Indexes a PipeDoc document into OpenSearch.
+     *
+     * <p>This method creates a document from a PipeDoc update notification containing:
+     * <ul>
+     *   <li>Storage ID and document ID</li>
+     *   <li>Title, author, and description</li>
+     *   <li>Tags as a nested map structure</li>
+     *   <li>Timestamps: created_at, updated_at, indexed_at</li>
+     * </ul>
+     *
+     * <p>The storage ID is used as the document ID for indexing.
+     *
+     * @param notification the PipeDocUpdateNotification containing document metadata
+     * @return a {@link Uni} that completes when indexing succeeds, or fails with an exception
      */
     public Uni<Void> indexPipeDoc(PipeDocUpdateNotification notification) {
         Map<String, Object> document = new HashMap<>();
@@ -303,7 +420,10 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Delete a PipeDoc from the index
+     * Deletes a PipeDoc document from the OpenSearch index.
+     *
+     * @param storageId the storage ID of the document to delete (used as document ID)
+     * @return a {@link Uni} that completes when deletion succeeds, or fails with an exception
      */
     public Uni<Void> deletePipeDoc(String storageId) {
         try {
@@ -322,7 +442,21 @@ public class OpenSearchIndexingService {
     // ========== PROCESS REQUEST OPERATIONS ==========
 
     /**
-     * Index a ProcessRequest
+     * Indexes a process request into OpenSearch.
+     *
+     * <p>This method creates a document from a process request update notification containing:
+     * <ul>
+     *   <li>Storage ID and request ID</li>
+     *   <li>Name and description</li>
+     *   <li>Module ID and processor ID (if specified)</li>
+     *   <li>Tags as a nested map structure</li>
+     *   <li>Timestamps: created_at, updated_at, indexed_at</li>
+     * </ul>
+     *
+     * <p>The request ID is used as the document ID for indexing.
+     *
+     * @param notification the ProcessRequestUpdateNotification containing request metadata
+     * @return a {@link Uni} that completes when indexing succeeds, or fails with an exception
      */
     public Uni<Void> indexProcessRequest(ProcessRequestUpdateNotification notification) {
         Map<String, Object> document = new HashMap<>();
@@ -364,7 +498,10 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Delete a ProcessRequest from the index
+     * Deletes a process request from the OpenSearch index.
+     *
+     * @param requestId the unique identifier of the request to delete
+     * @return a {@link Uni} that completes when deletion succeeds, or fails with an exception
      */
     public Uni<Void> deleteProcessRequest(String requestId) {
         try {
@@ -383,7 +520,22 @@ public class OpenSearchIndexingService {
     // ========== PROCESS RESPONSE OPERATIONS ==========
 
     /**
-     * Index a ProcessResponse
+     * Indexes a process response into OpenSearch.
+     *
+     * <p>This method creates a document from a process response update notification containing:
+     * <ul>
+     *   <li>Storage ID and response ID</li>
+     *   <li>Name and description</li>
+     *   <li>Request ID (linking back to the originating request)</li>
+     *   <li>Status (SUCCESS, FAILED, etc.)</li>
+     *   <li>Tags as a nested map structure</li>
+     *   <li>Timestamps: created_at, updated_at, indexed_at</li>
+     * </ul>
+     *
+     * <p>The response ID is used as the document ID for indexing.
+     *
+     * @param notification the ProcessResponseUpdateNotification containing response metadata
+     * @return a {@link Uni} that completes when indexing succeeds, or fails with an exception
      */
     public Uni<Void> indexProcessResponse(ProcessResponseUpdateNotification notification) {
         Map<String, Object> document = new HashMap<>();
@@ -425,7 +577,10 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Delete a ProcessResponse from the index
+     * Deletes a process response from the OpenSearch index.
+     *
+     * @param responseId the unique identifier of the response to delete
+     * @return a {@link Uni} that completes when deletion succeeds, or fails with an exception
      */
     public Uni<Void> deleteProcessResponse(String responseId) {
         try {
@@ -444,7 +599,24 @@ public class OpenSearchIndexingService {
     // ========== GRAPH OPERATIONS ==========
 
     /**
-     * Index a PipelineGraph
+     * Indexes a pipeline graph structure into OpenSearch.
+     *
+     * <p>This method creates a document representing a complete pipeline graph containing:
+     * <ul>
+     *   <li>Graph ID and cluster ID</li>
+     *   <li>Name and description</li>
+     *   <li>Array of node IDs in the graph</li>
+     *   <li>Edge count</li>
+     *   <li>Graph mode (EDIT, EXECUTE, etc.)</li>
+     *   <li>Timestamps: created_at, modified_at, indexed_at</li>
+     * </ul>
+     *
+     * <p>The graph ID is used as the document ID for indexing.
+     *
+     * @param graph the PipelineGraph protobuf message to index
+     * @return a {@link Uni} that completes when indexing succeeds, or fails with an exception
+     * @see #indexGraphNode(GraphNode, String)
+     * @see #indexGraphEdge(GraphEdge, String)
      */
     public Uni<Void> indexGraph(PipelineGraph graph) {
         Map<String, Object> document = new HashMap<>();
@@ -487,7 +659,23 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Index a GraphNode
+     * Indexes an individual graph node into OpenSearch.
+     *
+     * <p>This method creates a document for a single node in a pipeline graph containing:
+     * <ul>
+     *   <li>Node ID and cluster ID</li>
+     *   <li>Name and node type</li>
+     *   <li>Module ID (the processing module this node uses)</li>
+     *   <li>Visibility (PUBLIC, PRIVATE, etc.)</li>
+     *   <li>Node mode (STREAMING, BATCH, etc.)</li>
+     *   <li>Timestamps: created_at, modified_at, indexed_at</li>
+     * </ul>
+     *
+     * <p>The document ID is a composite key: {@code clusterId/nodeId}.
+     *
+     * @param node the GraphNode protobuf message to index
+     * @param clusterId the cluster this node belongs to
+     * @return a {@link Uni} that completes when indexing succeeds, or fails with an exception
      */
     public Uni<Void> indexGraphNode(GraphNode node, String clusterId) {
         Map<String, Object> document = new HashMap<>();
@@ -528,7 +716,24 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Index a GraphEdge
+     * Indexes a graph edge (connection between nodes) into OpenSearch.
+     *
+     * <p>This method creates a document for an edge connecting two graph nodes containing:
+     * <ul>
+     *   <li>Edge ID, cluster ID</li>
+     *   <li>From node ID and to node ID</li>
+     *   <li>To cluster ID (for cross-cluster edges)</li>
+     *   <li>Condition (conditional routing expression)</li>
+     *   <li>Priority (for edge ordering)</li>
+     *   <li>Is cross-cluster flag</li>
+     *   <li>Timestamp: indexed_at</li>
+     * </ul>
+     *
+     * <p>The document ID is a composite key: {@code clusterId/edgeId}.
+     *
+     * @param edge the GraphEdge protobuf message to index
+     * @param clusterId the cluster this edge belongs to
+     * @return a {@link Uni} that completes when indexing succeeds, or fails with an exception
      */
     public Uni<Void> indexGraphEdge(GraphEdge edge, String clusterId) {
         Map<String, Object> document = new HashMap<>();
@@ -570,9 +775,21 @@ public class OpenSearchIndexingService {
     // ========== HELPER METHODS ==========
 
     /**
-     * Build path components array for efficient tree queries
-     * Example: "/drive/documents/projects/2024" becomes:
-     * ["/", "/drive", "/drive/documents", "/drive/documents/projects", "/drive/documents/projects/2024"]
+     * Builds a path components array for efficient hierarchical tree queries.
+     *
+     * <p>This method decomposes a file path into all its ancestor paths, enabling
+     * efficient queries like "find all files under /drive/documents" by matching
+     * against the path_components field.
+     *
+     * <p><strong>Example:</strong><br>
+     * Input: {@code "/drive/documents/projects/2024"}<br>
+     * Output: {@code ["/", "/drive", "/drive/documents", "/drive/documents/projects", "/drive/documents/projects/2024"]}
+     *
+     * <p>This approach allows OpenSearch to efficiently query all descendants of a folder
+     * using a term query on the path_components field.
+     *
+     * @param path the full file path (e.g., "/drive/folder/file.txt")
+     * @return a list of all ancestor paths including the given path, or {@code ["/"]} if path is null/empty
      */
     private List<String> buildPathComponents(String path) {
         if (path == null || path.isEmpty()) {
@@ -601,7 +818,12 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Extract file extension from filename
+     * Extracts the file extension from a filename.
+     *
+     * <p>The extension is converted to lowercase for consistency.
+     *
+     * @param filename the filename to extract from (e.g., "document.PDF")
+     * @return the lowercase extension without the dot (e.g., "pdf"), or empty string if no extension
      */
     private String extractFileExtension(String filename) {
         if (filename == null || filename.isEmpty()) {
@@ -617,7 +839,13 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Extract class name from protobuf type URL
+     * Extracts the class name from a protobuf type URL.
+     *
+     * <p>Protobuf Any messages use type URLs like "type.googleapis.com/package.ClassName".
+     * This method extracts just the class name portion for easier searching and filtering.
+     *
+     * @param typeUrl the protobuf type URL (e.g., "type.googleapis.com/ai.pipestream.Node")
+     * @return the class name portion (e.g., "ai.pipestream.Node"), or the full URL if no slash found
      */
     private String extractClassName(String typeUrl) {
         if (typeUrl == null || typeUrl.isEmpty()) {
@@ -633,7 +861,17 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Get MIME type category for faceting
+     * Determines the high-level category of a MIME type for faceting and filtering.
+     *
+     * <p>This method maps detailed MIME types to broad categories suitable for
+     * user-facing filters and aggregations.
+     *
+     * <p><strong>Supported categories:</strong>
+     * image, video, audio, text, pdf, document, spreadsheet, presentation,
+     * archive, application, other, unknown
+     *
+     * @param mimeType the MIME type to categorize (e.g., "application/pdf")
+     * @return the category name (e.g., "pdf"), or "unknown" if null/empty
      */
     private String getMimeCategory(String mimeType) {
         if (mimeType == null || mimeType.isEmpty()) {
@@ -657,7 +895,18 @@ public class OpenSearchIndexingService {
     // ========== SIMPLE JSON INDEXING FOR DEMO ==========
 
     /**
-     * Simple drive indexing using protobuf-to-JSON conversion
+     * Indexes a drive using simple protobuf-to-JSON conversion (demo/test method).
+     *
+     * <p>This method provides a simplified indexing approach that directly converts
+     * the protobuf message to JSON without field enrichment. Useful for testing
+     * and prototyping.
+     *
+     * <p><strong>Note:</strong> This indexes to a separate "drives-simple" index and does
+     * not include the metadata enrichment of {@link #indexDrive(Drive)}.
+     *
+     * @param drive the Drive protobuf message to index
+     * @return a {@link Uni} that completes when indexing succeeds, or fails with an exception
+     * @see #indexDrive(Drive) for production indexing with enrichment
      */
     public Uni<Void> indexDriveSimple(Drive drive) {
         LOG.infof("Indexing drive with simple JSON conversion: %s", drive.getName());
@@ -680,7 +929,19 @@ public class OpenSearchIndexingService {
     }
 
     /**
-     * Simple node indexing using protobuf-to-JSON conversion
+     * Indexes a node using simple protobuf-to-JSON conversion (demo/test method).
+     *
+     * <p>This method provides a simplified indexing approach that directly converts
+     * the protobuf message to JSON without field enrichment. Useful for testing
+     * and prototyping.
+     *
+     * <p><strong>Note:</strong> This indexes to a separate "nodes-simple" index and does
+     * not include the metadata enrichment of {@link #indexNode(Node, String)}.
+     *
+     * @param node the Node protobuf message to index
+     * @param drive the drive name (currently unused in simple indexing)
+     * @return a {@link Uni} that completes when indexing succeeds, or fails with an exception
+     * @see #indexNode(Node, String) for production indexing with enrichment
      */
     public Uni<Void> indexNodeSimple(Node node, String drive) {
         LOG.infof("Indexing node with simple JSON conversion: %s", String.valueOf(node.getId()));

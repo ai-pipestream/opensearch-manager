@@ -17,17 +17,65 @@ import org.jboss.logging.Logger;
 
 import java.util.List;
 
+/**
+ * gRPC service implementation for managing OpenSearch operations.
+ *
+ * <p>This service provides endpoints for:
+ * <ul>
+ *   <li>Schema management - creating indices with nested embeddings fields</li>
+ *   <li>Document indexing - storing documents with embeddings in OpenSearch</li>
+ *   <li>Full-text search - querying indexed filesystem metadata</li>
+ * </ul>
+ *
+ * <p>The service implements Strategy 1 for embedding storage, where different vector
+ * dimensions are stored in separate nested fields (e.g., embeddings_384, embeddings_768).
+ * This allows for efficient querying of vectors with specific dimensions while maintaining
+ * schema flexibility.
+ *
+ * <p>All operations are reactive and return {@link Uni} types for non-blocking execution.
+ *
+ * @author PipeStream.ai
+ * @version 1.0
+ * @see OpenSearchSchemaService
+ * @see org.opensearch.client.opensearch.OpenSearchAsyncClient
+ */
 @GrpcService
 public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc.OpenSearchManagerServiceImplBase {
 
     private static final Logger LOG = Logger.getLogger(OpenSearchManagerService.class);
 
+    /**
+     * OpenSearch schema service for managing index mappings and nested field creation.
+     * Injected via CDI.
+     */
     @Inject
-    OpenSearchSchemaService openSearchClient; // Inject the interface
-    
+    OpenSearchSchemaService openSearchClient;
+
+    /**
+     * Asynchronous OpenSearch client for executing search operations.
+     * Injected via CDI.
+     */
     @Inject
     org.opensearch.client.opensearch.OpenSearchAsyncClient openSearchAsyncClient;
 
+    /**
+     * Ensures that a nested embeddings field exists in the specified OpenSearch index.
+     *
+     * <p>This method implements a safe, idempotent operation with the following logic:
+     * <ol>
+     *   <li>Check if the nested field already exists</li>
+     *   <li>If not, attempt to create it with the specified vector field definition</li>
+     *   <li>Handle concurrent creation attempts gracefully</li>
+     *   <li>Recover from errors by double-checking field existence</li>
+     * </ol>
+     *
+     * <p>The method is designed to handle race conditions where multiple requests
+     * might try to create the same field simultaneously.
+     *
+     * @param request the request containing index name, nested field name, and vector definition
+     * @return a {@link Uni} emitting the response indicating whether the field already existed
+     * @throws RuntimeException if the field cannot be created and doesn't exist after retry
+     */
     @Override
     public Uni<EnsureNestedEmbeddingsFieldExistsResponse> ensureNestedEmbeddingsFieldExists(EnsureNestedEmbeddingsFieldExistsRequest request) {
         final String indexName = request.getIndexName();
@@ -81,10 +129,33 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
                 });
     }
 
+    /**
+     * Builds a response indicating whether the nested embeddings field schema already existed.
+     *
+     * @param existed true if the schema already existed, false if it was newly created
+     * @return the response object
+     */
     private EnsureNestedEmbeddingsFieldExistsResponse buildResponse(boolean existed) {
         return EnsureNestedEmbeddingsFieldExistsResponse.newBuilder().setSchemaExisted(existed).build();
     }
 
+    /**
+     * Indexes an OpenSearch document with embeddings into the specified index.
+     *
+     * <p>This method performs the following steps:
+     * <ol>
+     *   <li>Analyzes the document to determine required embedding field dimensions</li>
+     *   <li>Ensures the index has appropriate nested fields for all vector dimensions</li>
+     *   <li>Converts the protobuf document to JSON format</li>
+     *   <li>Indexes the document using the original document ID</li>
+     * </ol>
+     *
+     * <p>The method automatically creates nested embedding fields (e.g., embeddings_384,
+     * embeddings_768) based on the vector dimensions present in the document's embeddings list.
+     *
+     * @param request the request containing the document to index and target index name
+     * @return a {@link Uni} emitting the response with success status and document ID
+     */
     @Override
     public Uni<IndexDocumentResponse> indexDocument(IndexDocumentRequest request) {
         var document = request.getDocument();
@@ -113,6 +184,17 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
             });
     }
     
+    /**
+     * Ensures the index has all necessary nested embedding fields for the document.
+     *
+     * <p>This method analyzes all embeddings in the document, extracts the unique
+     * vector dimensions, and ensures that nested fields exist for each dimension.
+     * Multiple nested field creation requests are executed in parallel for efficiency.
+     *
+     * @param indexName the name of the target index
+     * @param document the document containing embeddings to analyze
+     * @return a {@link Uni} that completes when all nested fields are ensured
+     */
     private Uni<Void> ensureIndexForDocument(String indexName, OpenSearchDocument document) {
         // For each unique vector dimension, ensure the appropriate nested field exists
         Set<Integer> dimensions = document.getEmbeddingsList().stream()
@@ -144,6 +226,17 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
         return Uni.combine().all().unis(requests).discardItems();
     }
     
+    /**
+     * Indexes a JSON document into OpenSearch using the specified document ID.
+     *
+     * <p>This operation runs on a worker thread pool to avoid blocking the event loop.
+     * Currently logs the indexing operation (TODO: implement actual indexing).
+     *
+     * @param indexName the name of the target index
+     * @param documentId the unique identifier for the document
+     * @param jsonDoc the document content in JSON format
+     * @return a {@link Uni} emitting true if indexing succeeded, false otherwise
+     */
     private Uni<Boolean> indexDocumentToOpenSearch(String indexName, String documentId, String jsonDoc) {
         return Uni.createFrom().item(() -> {
             try {
@@ -158,6 +251,23 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
         }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
+    /**
+     * Indexes a protobuf {@link com.google.protobuf.Any} document into OpenSearch.
+     *
+     * <p>This method handles documents wrapped in protobuf Any messages, with special
+     * support for {@link StringValue} messages. For other message types, it creates
+     * a simple JSON representation with the type URL and value.
+     *
+     * <p>The method supports two indexing modes:
+     * <ul>
+     *   <li>No field mappings - creates a basic document with JSON content</li>
+     *   <li>With field mappings - requires type-specific support (not yet implemented)</li>
+     * </ul>
+     *
+     * @param request the request containing the Any document, index name, and optional field mappings
+     * @return a {@link Uni} emitting the response with success status and document ID
+     * @throws IllegalArgumentException if field mappings are provided (not yet supported)
+     */
     @Override
     public Uni<IndexDocumentResponse> indexAnyDocument(IndexAnyDocumentRequest request) {
         return Uni.createFrom().item(() -> {
@@ -234,6 +344,16 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
         });
     }
 
+    /**
+     * Creates an OpenSearch index with a nested embeddings field.
+     *
+     * <p>The index is created with the appropriate vector field definition for
+     * the specified dimension. The nested field name is automatically determined
+     * based on the vector dimension (e.g., embeddings_384 for 384-dimensional vectors).
+     *
+     * @param request the request containing index name and vector field definition
+     * @return a {@link Uni} emitting the response with success status
+     */
     @Override
     public Uni<CreateIndexResponse> createIndex(CreateIndexRequest request) {
         return ensureIndexWithEmbeddingsField(request.getIndexName(), request.getVectorFieldDefinition())
@@ -245,7 +365,14 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
 
     /**
      * Ensures index exists with proper embeddings field for Strategy 1.
-     * Analyzes vector dimensions and creates appropriate nested fields.
+     *
+     * <p>Strategy 1 uses dimension-specific nested fields (e.g., embeddings_384, embeddings_768)
+     * to store vectors of different dimensions separately. This method determines the
+     * appropriate field name and creates the index with the correct mapping.
+     *
+     * @param indexName the name of the index to create or verify
+     * @param vectorDef the vector field definition specifying dimension and other properties
+     * @return a {@link Uni} emitting true if the index was created successfully
      */
     private Uni<Boolean> ensureIndexWithEmbeddingsField(String indexName, VectorFieldDefinition vectorDef) {
         String fieldName = determineEmbeddingsFieldName(vectorDef.getDimension());
@@ -253,13 +380,28 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
     }
 
     /**
-     * Determines the embeddings field name based on dimension.
-     * Strategy 1 uses separate fields for different dimensions (embeddings_384, embeddings_768).
+     * Determines the embeddings field name based on vector dimension.
+     *
+     * <p>Strategy 1 uses dimension-specific field names to allow different vector
+     * dimensions to coexist in the same index. This enables flexible embedding
+     * storage where documents can have embeddings from different models.
+     *
+     * @param dimension the vector dimension (e.g., 384, 768, 1536)
+     * @return the field name in format "embeddings_{dimension}" (e.g., "embeddings_384")
      */
     private String determineEmbeddingsFieldName(int dimension) {
         return "embeddings_" + dimension;
     }
 
+    /**
+     * Checks whether the specified index exists in OpenSearch.
+     *
+     * <p>This method verifies the existence of an index by checking for the
+     * presence of a standard "embeddings" nested field in the mapping.
+     *
+     * @param request the request containing the index name to check
+     * @return a {@link Uni} emitting the response indicating whether the index exists
+     */
     @Override
     public Uni<IndexExistsResponse> indexExists(IndexExistsRequest request) {
         return openSearchClient.nestedMappingExists(request.getIndexName(), "embeddings")
@@ -267,8 +409,18 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
     }
 
     /**
-     * Strategy 1 helper: Analyzes OpenSearchDocument to determine required embedding fields.
-     * Creates separate nested fields for different vector dimensions.
+     * Analyzes an OpenSearch document to determine required embedding field names.
+     *
+     * <p>This Strategy 1 helper method examines all embeddings in the document,
+     * groups them by vector dimension, and generates the appropriate field names
+     * for each unique dimension found.
+     *
+     * <p>For example, if a document has embeddings with dimensions 384 and 768,
+     * this method returns {"embeddings_384", "embeddings_768"}.
+     *
+     * @param document the document to analyze
+     * @return a set of field names required for the document's embeddings,
+     *         or a singleton set containing "embeddings" if no embeddings are found
      */
     private Set<String> analyzeRequiredEmbeddingFields(OpenSearchDocument document) {
         Set<String> fields = new HashSet<>();
@@ -291,6 +443,28 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
         return fields.isEmpty() ? Set.of("embeddings") : fields;
     }
 
+    /**
+     * Performs a full-text search on filesystem metadata stored in OpenSearch.
+     *
+     * <p>This method provides advanced search capabilities including:
+     * <ul>
+     *   <li>Multi-field text search across title, description, and tags</li>
+     *   <li>Metadata filtering using tag-based filters</li>
+     *   <li>Result highlighting with HTML tags</li>
+     *   <li>Pagination using search_after for efficient deep pagination</li>
+     *   <li>Relevance scoring with both score and ID-based sorting</li>
+     * </ul>
+     *
+     * <p>The search uses a bool query with multi_match for text search and term
+     * filters for metadata. Results are returned with highlights showing matching
+     * text snippets surrounded by &lt;em&gt; tags.
+     *
+     * <p>Pagination is implemented using the search_after parameter with a composite
+     * sort key (score + document ID) to ensure stable pagination even with tied scores.
+     *
+     * @param request the search request containing query text, filters, pagination, and drive info
+     * @return a {@link Uni} emitting the search response with results, highlights, and pagination info
+     */
     @Override
     public Uni<FilesystemMetaSearchResponse> searchFilesystemMeta(FilesystemMetaSearchRequest request) {
         LOG.infof("Searching filesystem metadata: drive=%s, query=%s", request.getDrive(), request.getQuery());

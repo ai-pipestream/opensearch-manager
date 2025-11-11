@@ -22,14 +22,63 @@ import java.util.concurrent.TimeUnit;
 
 import static ai.pipestream.schemamanager.opensearch.IndexConstants.Index;
 
+/**
+ * Initializes OpenSearch indices on application startup.
+ *
+ * <p>This service observes the {@link StartupEvent} and ensures that required
+ * OpenSearch indices exist with proper mappings before the application begins
+ * processing requests. If indices already exist, they are left unchanged.
+ *
+ * <p><strong>Initialized Indices:</strong>
+ * <ul>
+ *   <li><strong>repository-pipedocs</strong> - PipeDoc documents with metadata and tags</li>
+ *   <li><strong>filesystem-nodes</strong> - File and folder nodes with path hierarchy</li>
+ *   <li><strong>filesystem-drives</strong> - Storage drive configurations</li>
+ * </ul>
+ *
+ * <p><strong>Index Configuration:</strong><br>
+ * All indices are created with:
+ * <ul>
+ *   <li>1 primary shard (suitable for development and small deployments)</li>
+ *   <li>0 replica shards (no replication for development)</li>
+ *   <li>Type mappings appropriate for each entity type</li>
+ * </ul>
+ *
+ * <p><strong>Retry Strategy:</strong><br>
+ * Operations are retried up to 6 times with exponential backoff starting at 250ms
+ * to handle transient connection issues during startup. This is especially useful
+ * when OpenSearch is starting up at the same time as the application.
+ *
+ * <p><strong>Error Handling:</strong><br>
+ * Index creation errors are logged but do not prevent application startup. This allows
+ * the application to start even if OpenSearch is temporarily unavailable, though
+ * indexing operations will fail until connectivity is restored.
+ *
+ * @author PipeStream.ai
+ * @version 1.0
+ * @see IndexConstants.Index
+ */
 @ApplicationScoped
 public class IndexInitializer {
 
     private static final Logger LOG = Logger.getLogger(IndexInitializer.class);
 
+    /**
+     * Synchronous OpenSearch client for index management operations.
+     * Injected via CDI.
+     */
     @Inject
     OpenSearchClient client;
 
+    /**
+     * Observes the application startup event and initializes OpenSearch indices.
+     *
+     * <p>This method is called automatically by Quarkus during application startup.
+     * It creates three core indices if they don't already exist. Errors are logged
+     * but do not prevent the application from starting.
+     *
+     * @param ev the startup event (unused)
+     */
     public void onStart(@Observes StartupEvent ev) {
         try {
             ensureIndex(Index.REPOSITORY_PIPEDOCS.getIndexName(), buildPipeDocsMapping());
@@ -40,6 +89,22 @@ public class IndexInitializer {
         }
     }
 
+    /**
+     * Ensures an OpenSearch index exists with the specified mapping.
+     *
+     * <p>This method:
+     * <ol>
+     *   <li>Checks if the index already exists (with retry)</li>
+     *   <li>If not, creates the index with 1 shard, 0 replicas, and the provided mapping</li>
+     * </ol>
+     *
+     * <p>Both the existence check and index creation use exponential backoff retry
+     * to handle transient connectivity issues.
+     *
+     * @param indexName the name of the index to create
+     * @param mapping the type mapping for the index
+     * @throws IOException if index creation fails after all retries
+     */
     private void ensureIndex(String indexName, TypeMapping mapping) throws IOException {
         boolean exists = executeWithRetry("check index existence for " + indexName,
             () -> client.indices().exists(new ExistsRequest.Builder().index(indexName).build()).value());
@@ -62,6 +127,24 @@ public class IndexInitializer {
         });
     }
 
+    /**
+     * Builds the type mapping for the repository-pipedocs index.
+     *
+     * <p>This mapping includes:
+     * <ul>
+     *   <li><strong>doc_id</strong> - Keyword (exact match)</li>
+     *   <li><strong>storage_id</strong> - Keyword (exact match)</li>
+     *   <li><strong>title</strong> - Text (full-text search)</li>
+     *   <li><strong>title_raw</strong> - Keyword (sorting/aggregations)</li>
+     *   <li><strong>author</strong> - Text (full-text search)</li>
+     *   <li><strong>author_raw</strong> - Keyword (sorting/aggregations)</li>
+     *   <li><strong>description</strong> - Text (full-text search)</li>
+     *   <li><strong>tags</strong> - Object with dynamic mapping (flexible metadata)</li>
+     *   <li><strong>created_at, updated_at, indexed_at</strong> - Date fields</li>
+     * </ul>
+     *
+     * @return the configured TypeMapping for PipeDocs
+     */
     private TypeMapping buildPipeDocsMapping() {
         // Basic metadata-centric mapping for PipeDocs (keyword search for now)
         TypeMapping.Builder b = new TypeMapping.Builder();
@@ -79,6 +162,24 @@ public class IndexInitializer {
         return b.build();
     }
 
+    /**
+     * Builds the type mapping for the filesystem-nodes index.
+     *
+     * <p>This mapping includes:
+     * <ul>
+     *   <li><strong>node_id</strong> - Keyword (exact match)</li>
+     *   <li><strong>drive</strong> - Keyword (filtering by drive)</li>
+     *   <li><strong>name</strong> - Text (full-text search)</li>
+     *   <li><strong>name_text</strong> - Text (duplicate for analysis)</li>
+     *   <li><strong>path</strong> - Keyword (exact path matching)</li>
+     *   <li><strong>path_text</strong> - Text (path components search)</li>
+     *   <li><strong>node_type</strong> - Keyword (FILE/FOLDER filtering)</li>
+     *   <li><strong>tags</strong> - Object with dynamic mapping</li>
+     *   <li><strong>created_at, updated_at, indexed_at</strong> - Date fields</li>
+     * </ul>
+     *
+     * @return the configured TypeMapping for filesystem nodes
+     */
     private TypeMapping buildFilesystemNodesMapping() {
         // Core fields for filesystem nodes to support simple querying
         TypeMapping.Builder b = new TypeMapping.Builder();
@@ -95,6 +196,21 @@ public class IndexInitializer {
         b.properties("indexed_at", Property.of(p -> p.date(d -> d)));
         return b.build();
     }
+    /**
+     * Builds the type mapping for the filesystem-drives index.
+     *
+     * <p>This mapping includes:
+     * <ul>
+     *   <li><strong>name</strong> - Keyword (unique drive identifier)</li>
+     *   <li><strong>description</strong> - Text (full-text search)</li>
+     *   <li><strong>total_size</strong> - Long (numeric aggregations)</li>
+     *   <li><strong>node_count</strong> - Long (numeric aggregations)</li>
+     *   <li><strong>metadata</strong> - Object with dynamic mapping</li>
+     *   <li><strong>created_at, last_accessed, indexed_at</strong> - Date fields</li>
+     * </ul>
+     *
+     * @return the configured TypeMapping for filesystem drives
+     */
     private TypeMapping buildFilesystemDrivesMapping() {
         TypeMapping.Builder b = new TypeMapping.Builder();
         b.properties("name", Property.of(p -> p.keyword(KeywordProperty.of(k -> k))));
@@ -108,6 +224,26 @@ public class IndexInitializer {
         return b.build();
     }
 
+    /**
+     * Executes an OpenSearch operation with exponential backoff retry.
+     *
+     * <p>This method retries {@link IOException} failures up to 6 times with
+     * exponential backoff starting at 250ms and increasing linearly (250ms, 500ms,
+     * 750ms, 1000ms, 1250ms, 1500ms).
+     *
+     * <p>This strategy is effective for handling:
+     * <ul>
+     *   <li>OpenSearch service starting up</li>
+     *   <li>Temporary network connectivity issues</li>
+     *   <li>Connection pool exhaustion</li>
+     * </ul>
+     *
+     * @param <T> the return type of the operation
+     * @param description a human-readable description for logging
+     * @param operation the operation to execute
+     * @return the result of the operation if successful
+     * @throws IOException if the operation fails after all retries
+     */
     private <T> T executeWithRetry(String description, Callable<T> operation) throws IOException {
         int attempts = 0;
         while (true) {
@@ -136,6 +272,16 @@ public class IndexInitializer {
         }
     }
 
+    /**
+     * Determines if an exception is retryable.
+     *
+     * <p>Currently, only {@link IOException} is considered retryable, as it
+     * typically indicates transient network issues rather than permanent errors
+     * like authentication failures or malformed requests.
+     *
+     * @param throwable the exception to check
+     * @return true if the exception is an IOException, false otherwise
+     */
     private boolean isRetryable(Throwable throwable) {
         return throwable instanceof IOException;
     }

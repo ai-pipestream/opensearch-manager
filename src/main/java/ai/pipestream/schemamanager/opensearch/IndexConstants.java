@@ -1,12 +1,43 @@
 package ai.pipestream.schemamanager.opensearch;
 
 /**
- * Constants for OpenSearch indices and field names
+ * Centralized constants for OpenSearch index names and field names.
+ *
+ * <p>This class provides type-safe enums for all OpenSearch indices and their
+ * field names used throughout the application. Using these constants ensures
+ * consistency across indexing, querying, and mapping operations.
+ *
+ * <p><strong>Benefits:</strong>
+ * <ul>
+ *   <li>Single source of truth for index and field names</li>
+ *   <li>Compile-time safety (no typos in string literals)</li>
+ *   <li>IDE autocomplete support</li>
+ *   <li>Easy refactoring and renaming</li>
+ * </ul>
+ *
+ * <p>The class is organized into multiple enums, each representing a different
+ * scope of constants:
+ * <ul>
+ *   <li>{@link Index} - OpenSearch index names</li>
+ *   <li>{@link CommonFields} - Fields used across all/most indices</li>
+ *   <li>{@link DriveFields} - Filesystem drive-specific fields</li>
+ *   <li>{@link NodeFields} - Filesystem node-specific fields</li>
+ *   <li>{@link PipeDocFields} - PipeDoc document-specific fields</li>
+ *   <li>{@link ProcessFields} - Process request/response fields</li>
+ *   <li>{@link GraphFields} - Pipeline graph-specific fields</li>
+ *   <li>{@link ModuleFields} - Module definition fields</li>
+ * </ul>
+ *
+ * @author PipeStream.ai
+ * @version 1.0
  */
 public class IndexConstants {
-    
+
     /**
-     * Index names for different entity types
+     * OpenSearch index names for different entity types.
+     *
+     * <p>This enum defines all indices used by the application, organized by
+     * functional area (filesystem, repository, graphs).
      */
     public enum Index {
         // Filesystem indices
@@ -27,14 +58,22 @@ public class IndexConstants {
         Index(String indexName) {
             this.indexName = indexName;
         }
-        
+
+        /**
+         * Returns the actual OpenSearch index name.
+         *
+         * @return the index name string (e.g., "filesystem-drives")
+         */
         public String getIndexName() {
             return indexName;
         }
     }
     
     /**
-     * Common field names across all indices
+     * Common field names used across multiple indices.
+     *
+     * <p>These fields represent standard attributes that most entities share,
+     * such as identifiers, timestamps, and metadata.
      */
     public enum CommonFields {
         ID("id"),
@@ -52,14 +91,22 @@ public class IndexConstants {
         CommonFields(String fieldName) {
             this.fieldName = fieldName;
         }
-        
+
+        /**
+         * Returns the actual OpenSearch field name.
+         *
+         * @return the field name string (e.g., "created_at")
+         */
         public String getFieldName() {
             return fieldName;
         }
     }
     
     /**
-     * Drive-specific field names
+     * Field names specific to the filesystem-drives index.
+     *
+     * <p>These fields describe storage drive configurations including S3 settings,
+     * encryption, versioning, and access control.
      */
     public enum DriveFields {
         DRIVE_NAME("drive_name"),
@@ -82,14 +129,29 @@ public class IndexConstants {
         DriveFields(String fieldName) {
             this.fieldName = fieldName;
         }
-        
+
+        /**
+         * Returns the actual OpenSearch field name.
+         *
+         * @return the field name string (e.g., "bucket")
+         */
         public String getFieldName() {
             return fieldName;
         }
     }
     
     /**
-     * Node-specific field names
+     * Field names specific to the filesystem-nodes index.
+     *
+     * <p>These fields describe files and folders with comprehensive metadata including:
+     * <ul>
+     *   <li>Hierarchical path information (path, components, depth)</li>
+     *   <li>Size metrics (file, payload, metadata, total)</li>
+     *   <li>S3/storage details (bucket, key, etag, version)</li>
+     *   <li>File metadata (MIME type, extension, category)</li>
+     *   <li>Payload information (type, class, size)</li>
+     *   <li>UI/display fields (icon, service type)</li>
+     * </ul>
      */
     public enum NodeFields {
         NODE_ID("node_id"),
@@ -143,14 +205,22 @@ public class IndexConstants {
         NodeFields(String fieldName) {
             this.fieldName = fieldName;
         }
-        
+
+        /**
+         * Returns the actual OpenSearch field name.
+         *
+         * @return the field name string (e.g., "path_components")
+         */
         public String getFieldName() {
             return fieldName;
         }
     }
     
     /**
-     * PipeDoc-specific field names
+     * Field names specific to the repository-pipedocs index.
+     *
+     * <p>These fields describe PipeDoc documents which contain processed document
+     * metadata, embeddings, and extracted entities.
      */
     public enum PipeDocFields {
         STORAGE_ID("storage_id"),
@@ -166,14 +236,22 @@ public class IndexConstants {
         PipeDocFields(String fieldName) {
             this.fieldName = fieldName;
         }
-        
+
+        /**
+         * Returns the actual OpenSearch field name.
+         *
+         * @return the field name string (e.g., "storage_id")
+         */
         public String getFieldName() {
             return fieldName;
         }
     }
     
     /**
-     * Process Request/Response field names
+     * Field names for process request and response indices.
+     *
+     * <p>These fields describe pipeline execution requests and their corresponding
+     * responses, linking them to modules, processors, and streams.
      */
     public enum ProcessFields {
         STORAGE_ID("storage_id"),
@@ -189,14 +267,22 @@ public class IndexConstants {
         ProcessFields(String fieldName) {
             this.fieldName = fieldName;
         }
-        
+
+        /**
+         * Returns the actual OpenSearch field name.
+         *
+         * @return the field name string (e.g., "request_id")
+         */
         public String getFieldName() {
             return fieldName;
         }
     }
     
     /**
-     * Graph-specific field names
+     * Field names for pipeline graph indices (graphs, nodes, edges).
+     *
+     * <p>These fields describe the structure and connections of pipeline graphs,
+     * including graph metadata, node configurations, and edge routing logic.
      */
     public enum GraphFields {
         GRAPH_ID("graph_id"),
@@ -219,14 +305,22 @@ public class IndexConstants {
         GraphFields(String fieldName) {
             this.fieldName = fieldName;
         }
-        
+
+        /**
+         * Returns the actual OpenSearch field name.
+         *
+         * @return the field name string (e.g., "graph_id")
+         */
         public String getFieldName() {
             return fieldName;
         }
     }
     
     /**
-     * Module-specific field names
+     * Field names specific to the repository-modules index.
+     *
+     * <p>These fields describe processing module definitions including their
+     * implementation details, gRPC interfaces, and configuration schemas.
      */
     public enum ModuleFields {
         MODULE_ID("module_id"),
@@ -241,7 +335,12 @@ public class IndexConstants {
         ModuleFields(String fieldName) {
             this.fieldName = fieldName;
         }
-        
+
+        /**
+         * Returns the actual OpenSearch field name.
+         *
+         * @return the field name string (e.g., "module_id")
+         */
         public String getFieldName() {
             return fieldName;
         }
