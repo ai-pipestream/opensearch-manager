@@ -248,7 +248,7 @@ jobs:
             -Dquarkus.container-image.build=true \
             -Dquarkus.container-image.push=true \
             -Dquarkus.container-image.registry=ghcr.io \
-            -Dquarkus.container-image.group=ai-pipestream \
+            -Dquarkus.container-image.group=${{ github.repository_owner }} \
             -Dquarkus.container-image.name=opensearch-manager \
             -Dquarkus.container-image.tag=${{ needs.release.outputs.version }} \
             -Dquarkus.container-image.additional-tags=latest \
