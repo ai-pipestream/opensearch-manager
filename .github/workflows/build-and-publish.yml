@@ -143,6 +143,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push snapshot Docker image
+        env:
+          QUARKUS_CONTAINER_IMAGE_REGISTRY: ghcr.io
+          QUARKUS_CONTAINER_IMAGE_GROUP: ai-pipestream
+          QUARKUS_CONTAINER_IMAGE_USERNAME: ${{ github.actor }}
+          QUARKUS_CONTAINER_IMAGE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew clean build -x test \
             -Dquarkus.container-image.build=true \
