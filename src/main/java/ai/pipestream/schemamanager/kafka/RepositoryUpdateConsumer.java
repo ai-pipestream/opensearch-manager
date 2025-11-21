@@ -1,5 +1,6 @@
 package ai.pipestream.schemamanager.kafka;
 
+import ai.pipestream.grpc.util.KafkaProtobufKeys;
 import ai.pipestream.repository.filesystem.DriveUpdateNotification;
 import ai.pipestream.repository.filesystem.RepositoryEvent;
 import ai.pipestream.repository.filesystem.MutinyFilesystemServiceGrpc;
@@ -12,11 +13,14 @@ import ai.pipestream.repository.v1.ProcessResponseUpdateNotification;
 import ai.pipestream.config.v1.GraphUpdateNotification;
 import ai.pipestream.schemamanager.opensearch.OpenSearchIndexingService;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.reactive.messaging.kafka.Record;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
+
+import java.util.UUID;
 
 /**
  * Consumes repository update notifications from Kafka and indexes them in OpenSearch
@@ -33,15 +37,18 @@ public class RepositoryUpdateConsumer {
     GrpcClientProvider grpcClientProvider;
     
     @Incoming("drive-updates-in")
-    public Uni<Void> consumeDriveUpdate(Message<DriveUpdateNotification> message) {
-        DriveUpdateNotification notification = message.getPayload();
-        LOG.infof("Received drive update: type=%s, drive=%s", 
-                notification.getUpdateType(), notification.getDrive().getName());
-        
+    public Uni<Void> consumeDriveUpdate(Message<Record<String, DriveUpdateNotification>> message) {
+        Record<String, DriveUpdateNotification> record = message.getPayload();
+        DriveUpdateNotification notification = record.value();
+        // Use our tool to get the deterministic UUID key from the protobuf
+        java.util.UUID key = KafkaProtobufKeys.uuid(notification);
+        LOG.infof("Received drive update: type=%s, drive=%s, key=%s",
+                notification.getUpdateType(), notification.getDrive().getName(), key);
+
         return processUpdate(
                 notification.getUpdateType(),
-                () -> indexingService.indexDrive(notification.getDrive()),
-                () -> indexingService.deleteDrive(notification.getDrive().getName()),
+                () -> indexingService.indexDrive(notification.getDrive(), key),
+                () -> indexingService.deleteDrive(key),
                 "drive " + notification.getDrive().getName()
         )
         .onItemOrFailure().transformToUni((result, error) -> {

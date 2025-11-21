@@ -33,8 +33,8 @@ public class OpenSearchIndexingService {
     /**
      * Index a filesystem drive with enriched metadata
      */
-    public Uni<Void> indexDrive(Drive drive) {
-        LOG.infof("Indexing drive using Map approach: %s", drive.getName());
+    public Uni<Void> indexDrive(Drive drive, java.util.UUID key) {
+        LOG.infof("Indexing drive using Map approach: %s, key=%s", drive.getName(), key);
 
         Map<String, Object> document = new HashMap<>();
 
@@ -55,12 +55,12 @@ public class OpenSearchIndexingService {
             return Uni.createFrom().completionStage(
                 openSearchClient.index(r -> r
                     .index(Index.FILESYSTEM_DRIVES.getIndexName())
-                    .id(drive.getName())
+                    .id(key.toString())
                     .document(document)
                 )
             ).replaceWithVoid()
-            .onItem().invoke(() -> LOG.infof("Successfully indexed drive: %s", drive.getName()))
-            .onFailure().invoke(e -> LOG.errorf(e, "Failed to index drive: %s", drive.getName()));
+            .onItem().invoke(() -> LOG.infof("Successfully indexed drive: %s, key=%s", drive.getName(), key))
+            .onFailure().invoke(e -> LOG.errorf(e, "Failed to index drive: %s, key=%s", drive.getName(), key));
         } catch (Exception e) {
             return Uni.createFrom().failure(e);
         }
@@ -69,15 +69,15 @@ public class OpenSearchIndexingService {
     /**
      * Delete a filesystem drive from the index
      */
-    public Uni<Void> deleteDrive(String driveName) {
+    public Uni<Void> deleteDrive(java.util.UUID key) {
         try {
             return Uni.createFrom().completionStage(
                 openSearchClient.delete(r -> r
                     .index(Index.FILESYSTEM_DRIVES.getIndexName())
-                    .id(driveName)
+                    .id(key.toString())
                 )
             ).replaceWithVoid()
-            .onFailure().invoke(e -> LOG.errorf(e, "Failed to delete drive: %s", driveName));
+            .onFailure().invoke(e -> LOG.errorf(e, "Failed to delete drive: key=%s", key));
         } catch (Exception e) {
             return Uni.createFrom().failure(e);
         }

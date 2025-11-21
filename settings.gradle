@@ -9,7 +9,7 @@ rootProject.name = 'opensearch-manager'
 dependencyResolutionManagement {
     versionCatalogs {
         libs {
-            from("ai.pipestream:pipeline-bom-catalog:0.2.8-SNAPSHOT")
+            from("ai.pipestream:pipeline-bom-catalog:0.2.10-SNAPSHOT")
         }
     }
 
