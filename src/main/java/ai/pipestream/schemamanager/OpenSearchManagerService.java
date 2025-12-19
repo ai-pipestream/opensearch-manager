@@ -2,6 +2,9 @@ package ai.pipestream.schemamanager;
 
 import ai.pipestream.schemamanager.opensearch.OpenSearchSchemaService;
 import ai.pipestream.opensearch.v1.*;
+import ai.pipestream.schemamanager.v1.EnsureNestedEmbeddingsFieldExistsRequest;
+import ai.pipestream.schemamanager.v1.EnsureNestedEmbeddingsFieldExistsResponse;
+import ai.pipestream.schemamanager.v1.VectorFieldDefinition;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
 import com.google.protobuf.util.JsonFormat;

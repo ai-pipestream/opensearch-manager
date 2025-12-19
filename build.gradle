@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.maven.publish)
     id 'signing'
     id 'com.gradleup.nmcp' version '1.3.0'
-    alias(libs.plugins.proto.toolchain)
+    id 'ai.pipestream.proto-toolchain' version '0.7.7'
 }
 
 scmVersion {
@@ -24,26 +24,20 @@ scmVersion {
 
 def pipestreamBomVersion = findProperty('pipestreamBomVersion') ?: '0.7.9'
 
-// Proto toolchain configuration - fetches from Git and generates Java/gRPC code
+// Proto toolchain configuration - uses git-proto-workspace mode for cross-module imports
 pipestreamProtos {
-    sourceMode = 'git'
+    sourceMode = 'git-proto-workspace'
+    gitRepo = "https://github.com/ai-pipestream/pipestream-protos.git"
+    gitRef = "main"
 
     modules {
-        register("opensearch") {
-            gitRepo = "https://github.com/ai-pipestream/pipestream-protos.git"
-            gitRef = "main"
-            gitSubdir = "opensearch"
-        }
-        register("repo") {
-            gitRepo = "https://github.com/ai-pipestream/pipestream-protos.git"
-            gitRef = "main"
-            gitSubdir = "repo"
-        }
-        register("config") {
-            gitRepo = "https://github.com/ai-pipestream/pipestream-protos.git"
-            gitRef = "main"
-            gitSubdir = "config"
-        }
+        // Register modules by name only - workspace mode handles cross-module imports
+        register("common")
+        register("pipeline-module")
+        register("schemamanager")
+        register("config")
+        register("opensearch")
+        register("repo")
     }
 }
 

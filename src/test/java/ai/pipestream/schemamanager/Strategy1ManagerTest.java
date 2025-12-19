@@ -1,6 +1,10 @@
 package ai.pipestream.schemamanager;
 
-import ai.pipestream.opensearch.v1.*;
+import ai.pipestream.opensearch.v1.OpenSearchDocument;
+import ai.pipestream.opensearch.v1.OpenSearchEmbedding;
+import ai.pipestream.schemamanager.v1.KnnMethodDefinition;
+import ai.pipestream.schemamanager.v1.KnnParametersDefinition;
+import ai.pipestream.schemamanager.v1.VectorFieldDefinition;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -20,7 +24,7 @@ class Strategy1ManagerTest {
                 .setCreatedBy("test-system")
                 .setTitle("Test Document")
                 .setBody("Document content")
-                .addEmbeddings(Embedding.newBuilder()
+                .addEmbeddings(OpenSearchEmbedding.newBuilder()
                         .addVector(0.1f)
                         .addVector(0.2f)
                         .addVector(0.3f)
@@ -29,7 +33,7 @@ class Strategy1ManagerTest {
                         .setEmbeddingId("minilm_l6")
                         .setIsPrimary(true)
                         .build())
-                .addEmbeddings(Embedding.newBuilder()
+                .addEmbeddings(OpenSearchEmbedding.newBuilder()
                         .addVector(0.4f)
                         .addVector(0.5f)
                         .addVector(0.6f)
@@ -45,12 +49,12 @@ class Strategy1ManagerTest {
         assertThat("Should have embeddings", document.getEmbeddingsCount(), equalTo(2));
         
         // Verify primary embedding
-        Embedding primaryEmbedding = document.getEmbeddings(0);
+        OpenSearchEmbedding primaryEmbedding = document.getEmbeddings(0);
         assertThat("Should be primary", primaryEmbedding.getIsPrimary(), is(true));
         assertThat("Should have title config", primaryEmbedding.getChunkConfigId(), equalTo("title_embedding"));
         
         // Verify secondary embedding
-        Embedding secondaryEmbedding = document.getEmbeddings(1);
+        OpenSearchEmbedding secondaryEmbedding = document.getEmbeddings(1);
         assertThat("Should be secondary", secondaryEmbedding.getIsPrimary(), is(false));
         assertThat("Should have body config", secondaryEmbedding.getChunkConfigId(), equalTo("body_chunks"));
     }
@@ -76,7 +80,7 @@ class Strategy1ManagerTest {
         VectorFieldDefinition vectorDef = VectorFieldDefinition.newBuilder()
                 .setDimension(384)
                 .setKnnMethod(KnnMethodDefinition.newBuilder()
-                        .setEngine(KnnMethodDefinition.getDefaultInstance().getEngine())
+                        .setEngine(KnnMethodDefinition.KnnEngine.KNN_ENGINE_UNSPECIFIED)
                         .setSpaceType(KnnMethodDefinition.SpaceType.SPACE_TYPE_COSINESIMIL)
                         .setParameters(KnnParametersDefinition.newBuilder()
                                 .setM(com.google.protobuf.Int32Value.of(16))

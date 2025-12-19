@@ -1,6 +1,6 @@
 package ai.pipestream.schemamanager.opensearch;
 
-import ai.pipestream.opensearch.v1.VectorFieldDefinition;
+import ai.pipestream.schemamanager.v1.VectorFieldDefinition;
 import io.smallrye.mutiny.Uni;
 
 /**

@@ -1,6 +1,9 @@
 package ai.pipestream.schemamanager;
 
-import ai.pipestream.opensearch.v1.*;
+import ai.pipestream.opensearch.v1.MutinyOpenSearchManagerServiceGrpc;
+import ai.pipestream.schemamanager.v1.EnsureNestedEmbeddingsFieldExistsRequest;
+import ai.pipestream.schemamanager.v1.KnnMethodDefinition;
+import ai.pipestream.schemamanager.v1.VectorFieldDefinition;
 import ai.pipestream.schemamanager.util.WireMockTestResource;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.common.QuarkusTestResource;

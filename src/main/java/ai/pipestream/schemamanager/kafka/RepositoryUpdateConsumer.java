@@ -5,9 +5,8 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import ai.pipestream.repository.v1.filesystem.DriveUpdateNotification;
 import ai.pipestream.repository.v1.filesystem.RepositoryEvent;
 import ai.pipestream.repository.v1.filesystem.MutinyFilesystemServiceGrpc;
-import ai.pipestream.repository.v1.filesystem.GetNodeRequest;
-import ai.pipestream.repository.v1.filesystem.GetNodeResponse;
-import ai.pipestream.repository.v1.filesystem.Node;
+import ai.pipestream.repository.v1.filesystem.GetFilesystemNodeRequest;
+import ai.pipestream.repository.v1.filesystem.GetFilesystemNodeResponse;
 import io.smallrye.reactive.messaging.kafka.api.IncomingKafkaRecordMetadata;
 import ai.pipestream.repository.v1.ModuleUpdateNotification;
 import ai.pipestream.repository.v1.PipeDocUpdateNotification;
@@ -41,8 +40,10 @@ public class RepositoryUpdateConsumer {
     public Uni<Void> consumeDriveUpdate(Message<DriveUpdateNotification> message) {
         DriveUpdateNotification notification = message.getPayload();
         // Get UUID key from Kafka metadata
-        IncomingKafkaRecordMetadata<UUID, DriveUpdateNotification> metadata = 
-                message.getMetadata(IncomingKafkaRecordMetadata.class).orElse(null);
+        @SuppressWarnings("unchecked")
+        IncomingKafkaRecordMetadata<UUID, DriveUpdateNotification> metadata =
+                (IncomingKafkaRecordMetadata<UUID, DriveUpdateNotification>)
+                        message.getMetadata(IncomingKafkaRecordMetadata.class).orElse(null);
         UUID key = metadata != null ? metadata.getKey() : UUID.randomUUID();
         LOG.infof("Received drive update: type=%s, drive=%s, key=%s",
                 notification.getUpdateType(), notification.getDrive().getName(), key);
@@ -70,15 +71,15 @@ public class RepositoryUpdateConsumer {
         // Use dynamic gRPC to call repository service and get node metadata (without payload)
         return grpcClientFactory.getClient("repository-service", MutinyFilesystemServiceGrpc::newMutinyStub)
             .flatMap(repoClient -> {
-                GetNodeRequest getNodeRequest = GetNodeRequest.newBuilder()
+                GetFilesystemNodeRequest getNodeRequest = GetFilesystemNodeRequest.newBuilder()
                     .setDrive(event.getAccountId())
                     .setDocumentId(event.getDocumentId())
                     .setIncludePayload(false) // Metadata only for indexing
                     .build();
 
-                return repoClient.getNode(getNodeRequest);
+                return repoClient.getFilesystemNode(getNodeRequest);
             })
-            .map(GetNodeResponse::getNode)
+            .map(GetFilesystemNodeResponse::getNode)
             .flatMap(node -> {
                 // Index the node metadata in OpenSearch
                 return indexingService.indexNode(node, event.getAccountId());
