@@ -2,11 +2,11 @@ package ai.pipestream.schemamanager.kafka;
 
 import ai.pipestream.quarkus.dynamicgrpc.DynamicGrpcClientFactory;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import ai.pipestream.repository.v1.filesystem.DriveUpdateNotification;
-import ai.pipestream.repository.v1.filesystem.RepositoryEvent;
-import ai.pipestream.repository.v1.filesystem.MutinyFilesystemServiceGrpc;
-import ai.pipestream.repository.v1.filesystem.GetFilesystemNodeRequest;
-import ai.pipestream.repository.v1.filesystem.GetFilesystemNodeResponse;
+import ai.pipestream.repository.filesystem.v1.DriveUpdateNotification;
+import ai.pipestream.repository.filesystem.v1.RepositoryEvent;
+import ai.pipestream.repository.filesystem.v1.MutinyFilesystemServiceGrpc;
+import ai.pipestream.repository.filesystem.v1.GetFilesystemNodeRequest;
+import ai.pipestream.repository.filesystem.v1.GetFilesystemNodeResponse;
 import io.smallrye.reactive.messaging.kafka.api.IncomingKafkaRecordMetadata;
 import ai.pipestream.repository.v1.ModuleUpdateNotification;
 import ai.pipestream.repository.v1.PipeDocUpdateNotification;

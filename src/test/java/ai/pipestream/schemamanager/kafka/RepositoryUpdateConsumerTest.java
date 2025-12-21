@@ -1,7 +1,7 @@
 package ai.pipestream.schemamanager.kafka;
 
-import ai.pipestream.repository.v1.filesystem.Drive;
-import ai.pipestream.repository.v1.filesystem.DriveUpdateNotification;
+import ai.pipestream.repository.filesystem.v1.Drive;
+import ai.pipestream.repository.filesystem.v1.DriveUpdateNotification;
 import ai.pipestream.schemamanager.util.WireMockTestResource;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;

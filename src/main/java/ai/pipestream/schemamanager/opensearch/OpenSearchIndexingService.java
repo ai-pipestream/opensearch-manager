@@ -2,8 +2,8 @@ package ai.pipestream.schemamanager.opensearch;
 
 import com.google.protobuf.util.JsonFormat;
 import ai.pipestream.config.v1.*; // Includes all enums and messages
-import ai.pipestream.repository.v1.filesystem.Drive;
-import ai.pipestream.repository.v1.filesystem.Node;
+import ai.pipestream.repository.filesystem.v1.Drive;
+import ai.pipestream.repository.filesystem.v1.Node;
 import ai.pipestream.repository.v1.PipeDocUpdateNotification;
 import ai.pipestream.repository.v1.ProcessRequestUpdateNotification;
 import ai.pipestream.repository.v1.ProcessResponseUpdateNotification;
