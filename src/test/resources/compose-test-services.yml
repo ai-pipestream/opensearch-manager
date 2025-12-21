@@ -141,7 +141,7 @@ services:
   # OpenSearch instance for tests
   opensearch-test:
     container_name: opensearch-test
-    image: opensearchproject/opensearch:3.3.2
+    image: opensearchproject/opensearch:3.4.0
     networks:
       - pipeline-test-network
     environment:
