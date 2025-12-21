@@ -103,7 +103,7 @@ services:
   # Apicurio Registry for schema management (test instance)
   apicurio-registry-test:
     container_name: pipeline-apicurio-registry-test
-    image: apicurio/apicurio-registry:3.0.11
+    image: apicurio/apicurio-registry:3.1.6
     networks:
       - pipeline-test-network
     ports:
