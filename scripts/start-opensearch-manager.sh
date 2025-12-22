@@ -89,10 +89,6 @@ echo "  Service Host: $OPENSEARCH_MANAGER_HOST"
 echo "  HTTP/gRPC Port: $QUARKUS_HTTP_PORT"
 echo
 
-# #region agent log - Port check instrumentation
-echo '{"sessionId":"debug-opensearch","runId":"startup-check","hypothesisId":"A","location":"start-opensearch-manager.sh:93","message":"Checking if port is in use","data":{"port":"'$SERVICE_PORT'","service":"'$SERVICE_NAME'"},"timestamp":'$(date +%s%3N)'}' >> /home/krickert/IdeaProjects/.cursor/debug.log
-# #endregion
-
 # Check if already running and offer to kill
 if check_port "$SERVICE_PORT" "$SERVICE_NAME"; then
     # #region agent log - Port conflict detected
@@ -106,10 +102,6 @@ if check_port "$SERVICE_PORT" "$SERVICE_NAME"; then
         print_status "info" "Cancelled by user."
         exit 0
     fi
-else
-    # #region agent log - Port is free
-    echo '{"sessionId":"debug-opensearch","runId":"startup-check","hypothesisId":"A","location":"start-opensearch-manager.sh:98","message":"Port is free","data":{"port":"'$SERVICE_PORT'"},"timestamp":'$(date +%s%3N)'}' >> /home/krickert/IdeaProjects/.cursor/debug.log
-    # #endregion
 fi
 
 print_status "info" "Starting $SERVICE_NAME in Quarkus dev mode..."
@@ -119,15 +111,7 @@ echo
 
 # #region agent log - Compose file check
 COMPOSE_FILE="$HOME/.pipeline/compose-devservices.yml"
-if [ -f "$COMPOSE_FILE" ]; then
-    echo '{"sessionId":"debug-opensearch","runId":"compose-check","hypothesisId":"B","location":"start-opensearch-manager.sh:110","message":"Compose file exists","data":{"file":"'$COMPOSE_FILE'"},"timestamp":'$(date +%s%3N)'}' >> /home/krickert/IdeaProjects/.cursor/debug.log
-else
-    echo '{"sessionId":"debug-opensearch","runId":"compose-check","hypothesisId":"B","location":"start-opensearch-manager.sh:110","message":"Compose file missing","data":{"file":"'$COMPOSE_FILE'"},"timestamp":'$(date +%s%3N)'}' >> /home/krickert/IdeaProjects/.cursor/debug.log
-fi
 # #endregion
 
 # Start using the app's own gradlew with the detected registration host and compose file path
-# #region agent log - Starting gradlew
-echo '{"sessionId":"debug-opensearch","runId":"gradle-start","hypothesisId":"C","location":"start-opensearch-manager.sh:115","message":"Starting gradlew quarkusDev","data":{"composeFile":"'$COMPOSE_FILE'","registrationHost":"'$OPENSEARCH_MANAGER_HOST'"},"timestamp":'$(date +%s%3N)'}' >> /home/krickert/IdeaProjects/.cursor/debug.log
-# #endregion
 ./gradlew quarkusDev -Dservice.registration.host=$OPENSEARCH_MANAGER_HOST -Dquarkus.compose.devservices.files=$HOME/.pipeline/compose-devservices.yml
