@@ -454,9 +454,11 @@ public class OpenSearchIndexingService {
         document.put(CommonFields.NAME.getFieldName(), graph.getName());
         document.put(CommonFields.DESCRIPTION.getFieldName(), graph.getDescription());
 
-        // Node IDs as array
-        if (graph.getNodeIdsCount() > 0) {
-            document.put("node_ids", graph.getNodeIdsList());
+        // Node IDs as array (extracted from embedded nodes)
+        if (graph.getNodesCount() > 0) {
+            document.put("node_ids", graph.getNodesList().stream()
+                    .map(node -> node.getNodeId())
+                    .toList());
         }
 
         // Edge count
