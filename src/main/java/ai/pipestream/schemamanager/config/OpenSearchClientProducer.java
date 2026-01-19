@@ -86,6 +86,10 @@ public class OpenSearchClientProducer {
                         .build();
                 httpClientBuilder.setDefaultRequestConfig(requestConfig);
 
+                // Disable automatic content decompression to avoid GZIP issues
+                // when OpenSearch returns uncompressed responses
+                httpClientBuilder.disableContentCompression();
+
                 return httpClientBuilder;
             });
 
