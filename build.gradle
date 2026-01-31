@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.maven.publish)
     id 'signing'
     id 'com.gradleup.nmcp' version '1.3.0'
-    id 'ai.pipestream.proto-toolchain' version '0.7.7'
+    id 'ai.pipestream.proto-toolchain' version '0.7.14'
 }
 
 scmVersion {
@@ -72,6 +72,7 @@ dependencies {
     implementation 'ai.pipestream:pipestream-quarkus-devservices'
     implementation 'ai.pipestream:quarkus-dynamic-grpc'
     implementation 'ai.pipestream:pipestream-service-registration'
+    implementation 'ai.pipestream:pipestream-server'
 
     // OpenSearch client and supporting utilities
     implementation libs.opensearch.java
@@ -82,7 +83,7 @@ dependencies {
     testImplementation platform("ai.pipestream:pipestream-bom:${pipestreamBomVersion}")
     testImplementation libs.quarkus.junit5
     testImplementation libs.rest.assured
-    testImplementation(testFixtures("ai.pipestream:pipestream-test-support:${pipestreamBomVersion}"))
+    testImplementation "ai.pipestream:pipestream-test-support:${pipestreamBomVersion}"
     // Testcontainers - version managed by pipestream-bom
     testImplementation 'org.testcontainers:testcontainers'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter'

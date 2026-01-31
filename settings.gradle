@@ -16,16 +16,13 @@ rootProject.name = 'opensearch-manager'
 dependencyResolutionManagement {
     versionCatalogs {
         libs {
-            from("ai.pipestream:pipestream-bom-catalog:0.7.18")
+            from("ai.pipestream:pipestream-bom-catalog:0.7.20-SNAPSHOT")
         }
     }
 
     repositories {
         // Maven Local for local development (releases only for ai.pipestream)
         mavenLocal {
-            mavenContent {
-                releasesOnly()
-            }
             content {
                 includeGroupByRegex "ai\\.pipestream(\\..*)?"
             }
