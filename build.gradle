@@ -58,6 +58,7 @@ dependencies {
     implementation 'io.quarkus:quarkus-smallrye-health'
     implementation 'io.quarkus:quarkus-smallrye-stork'
     implementation 'io.quarkus:quarkus-messaging-kafka'
+    implementation 'io.quarkus:quarkus-jdbc-postgresql'
     
     // Quarkus Apicurio Registry Protobuf Extension (Zero-Config)
     // Version managed by pipestream-bom
@@ -73,10 +74,9 @@ dependencies {
     implementation 'ai.pipestream:quarkus-dynamic-grpc'
     implementation 'ai.pipestream:pipestream-service-registration'
     implementation 'ai.pipestream:pipestream-server'
-
-    // OpenSearch client and supporting utilities
+    implementation 'ai.pipestream:pipestream-opensearch'
     implementation libs.opensearch.java
-    implementation libs.httpclient5
+
     implementation libs.commons.lang3
 
     // Testing

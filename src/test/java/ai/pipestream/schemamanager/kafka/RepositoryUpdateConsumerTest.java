@@ -2,6 +2,7 @@ package ai.pipestream.schemamanager.kafka;
 
 import ai.pipestream.repository.filesystem.v1.Drive;
 import ai.pipestream.repository.filesystem.v1.DriveUpdateNotification;
+import ai.pipestream.test.support.OpensearchContainerTestResource;
 import ai.pipestream.test.support.OpensearchWireMockTestResource;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -20,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 @QuarkusTestResource(OpensearchWireMockTestResource.class)
+@QuarkusTestResource(OpensearchContainerTestResource.class)
 public class RepositoryUpdateConsumerTest {
 
     @Inject

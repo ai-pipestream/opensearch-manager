@@ -1,6 +1,7 @@
 package ai.pipestream.schemamanager;
 
 import ai.pipestream.opensearch.v1.*;
+import ai.pipestream.test.support.OpensearchContainerTestResource;
 import ai.pipestream.test.support.OpensearchWireMockTestResource;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -15,6 +16,7 @@ import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
 @QuarkusTestResource(OpensearchWireMockTestResource.class)
+@QuarkusTestResource(OpensearchContainerTestResource.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IndexAnyDocumentTest {
 

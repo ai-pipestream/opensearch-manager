@@ -5,6 +5,8 @@ import ai.pipestream.opensearch.v1.*;
 import ai.pipestream.schemamanager.v1.EnsureNestedEmbeddingsFieldExistsRequest;
 import ai.pipestream.schemamanager.v1.EnsureNestedEmbeddingsFieldExistsResponse;
 import ai.pipestream.schemamanager.v1.VectorFieldDefinition;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
 import com.google.protobuf.util.JsonFormat;
@@ -14,7 +16,6 @@ import java.util.Set;
 import java.util.HashSet;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
@@ -26,10 +27,13 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
     private static final Logger LOG = Logger.getLogger(OpenSearchManagerService.class);
 
     @Inject
-    OpenSearchSchemaService openSearchClient; // Inject the interface
-    
+    OpenSearchSchemaService openSearchClient;
+
     @Inject
     org.opensearch.client.opensearch.OpenSearchAsyncClient openSearchAsyncClient;
+
+    @Inject
+    ObjectMapper objectMapper;
 
     @Override
     public Uni<EnsureNestedEmbeddingsFieldExistsResponse> ensureNestedEmbeddingsFieldExists(EnsureNestedEmbeddingsFieldExistsRequest request) {
@@ -92,24 +96,24 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
     public Uni<IndexDocumentResponse> indexDocument(IndexDocumentRequest request) {
         var document = request.getDocument();
         var indexName = request.getIndexName();
-        
-        // Ensure index exists with proper embedding fields
+        var documentId = request.hasDocumentId() ? request.getDocumentId() : document.getOriginalDocId();
+        var routing = request.hasRouting() ? request.getRouting() : null;
+
         return ensureIndexForDocument(indexName, document)
             .flatMap(v -> {
                 try {
                     String jsonDoc = JsonFormat.printer().print(document);
-                    LOG.infof("Indexing document %s: %s", document.getOriginalDocId(), jsonDoc);
-                    
-                    // Actually index the document
-                    return indexDocumentToOpenSearch(indexName, document.getOriginalDocId(), jsonDoc)
+                    return indexDocumentToOpenSearch(indexName, documentId, jsonDoc, routing)
                         .map(success -> IndexDocumentResponse.newBuilder()
                             .setSuccess(success)
-                            .setDocumentId(document.getOriginalDocId())
+                            .setDocumentId(documentId)
                             .setMessage(success ? "Document indexed successfully" : "Failed to index document")
                             .build());
                 } catch (Exception e) {
+                    LOG.errorf(e, "Failed to serialize or index document %s", documentId);
                     return Uni.createFrom().item(IndexDocumentResponse.newBuilder()
                         .setSuccess(false)
+                        .setDocumentId(documentId)
                         .setMessage("Failed to index: " + e.getMessage())
                         .build());
                 }
@@ -147,18 +151,28 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
         return Uni.combine().all().unis(requests).discardItems();
     }
     
-    private Uni<Boolean> indexDocumentToOpenSearch(String indexName, String documentId, String jsonDoc) {
+    private Uni<Boolean> indexDocumentToOpenSearch(String indexName, String documentId, String jsonDoc, String routing) {
         return Uni.createFrom().item(() -> {
             try {
-                // TODO: Use OpenSearchClient to actually index
-                // For now, just log and return success
-                LOG.infof("Would index to %s with ID %s: %s", indexName, documentId, jsonDoc);
-                return true;
+                Map<String, Object> docMap = objectMapper.readValue(jsonDoc, new TypeReference<>() {});
+                var indexBuilder = new org.opensearch.client.opensearch.core.IndexRequest.Builder<Map<String, Object>>()
+                    .index(indexName)
+                    .id(documentId)
+                    .document(docMap);
+                if (routing != null && !routing.isBlank()) {
+                    indexBuilder.routing(routing);
+                }
+                var response = openSearchAsyncClient.index(indexBuilder.build()).get();
+                boolean success = "created".equals(response.result().jsonValue()) || "updated".equals(response.result().jsonValue());
+                if (success) {
+                    LOG.debugf("Indexed document %s to %s (result=%s)", documentId, indexName, response.result().jsonValue());
+                }
+                return success;
             } catch (Exception e) {
-                LOG.errorf(e, "Failed to index document %s", documentId);
+                LOG.errorf(e, "Failed to index document %s to %s", documentId, indexName);
                 return false;
             }
-        }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+        }).runSubscriptionOn(io.smallrye.mutiny.infrastructure.Infrastructure.getDefaultWorkerPool());
     }
 
     @Override
@@ -168,73 +182,83 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
                 var anyDocument = request.getDocument();
                 var indexName = request.getIndexName();
                 var fieldMappings = request.getFieldMappingsList();
-                
-                // Handle Any message manually with special case for StringValue
-                // Note: We're not using JsonFormat.printer() with TypeRegistry because it requires
-                // registering all possible types that might be contained in Any messages.
-                // Instead, we handle common types directly and fall back to a simple representation for others.
+
                 String jsonString;
-                
-                // Check if it's a StringValue (commonly used in tests)
                 if (anyDocument.getTypeUrl().endsWith("google.protobuf.StringValue")) {
-                    try {
-                        // Unpack the StringValue and get its value directly
-                        StringValue stringValue = anyDocument.unpack(StringValue.class);
-                        jsonString = "{\"value\":\"" + stringValue.getValue() + "\"}";
-                    } catch (InvalidProtocolBufferException e) {
-                        LOG.errorf(e, "Failed to unpack StringValue");
-                        throw e;
-                    }
+                    StringValue stringValue = anyDocument.unpack(StringValue.class);
+                    jsonString = "{\"value\":\"" + escapeJson(stringValue.getValue()) + "\"}";
                 } else {
-                    // For other types, create a simple JSON representation with type URL and value
-                    // This avoids the need for TypeRegistry while still providing useful information
-                    jsonString = "{\"typeUrl\":\"" + anyDocument.getTypeUrl() + 
-                                 "\",\"value\":\"" + anyDocument.getValue().toStringUtf8() + "\"}";
+                    jsonString = "{\"typeUrl\":\"" + escapeJson(anyDocument.getTypeUrl()) +
+                            "\",\"value\":\"" + escapeJson(anyDocument.getValue().toStringUtf8()) + "\"}";
                 }
-                
-                LOG.infof("Any document as JSON: %s", jsonString);
-                
-                // Create target OpenSearchDocument builder
-                var targetBuilder = OpenSearchDocument.newBuilder();
-                
-                // If no field mappings provided, create a basic document with JSON content
+
+                String documentId = (request.getDocumentId() != null && !request.getDocumentId().isBlank())
+                    ? request.getDocumentId()
+                    : "unknown";
+
+                OpenSearchDocument mappedDocument;
                 if (fieldMappings.isEmpty()) {
-                    targetBuilder.setOriginalDocId(request.hasDocumentId() ? request.getDocumentId() : "unknown")
-                               .setDocType("any_document")
-                               .setBody(jsonString);
+                    mappedDocument = OpenSearchDocument.newBuilder()
+                        .setOriginalDocId(documentId)
+                        .setDocType("any_document")
+                        .setBody(jsonString)
+                        .build();
                 } else {
-                    // For field mappings, we need the original message
-                    // This is a limitation - we'll need to support specific types for mapping
                     throw new IllegalArgumentException("Field mappings with Any documents require type-specific support. " +
                         "JSON representation: " + jsonString);
                 }
-                
-                var mappedDocument = targetBuilder.build();
-                var documentId = request.hasDocumentId() ? request.getDocumentId() : mappedDocument.getOriginalDocId();
-                
-                // TODO: Implement actual indexing logic using OpenSearchClient
-                LOG.infof("Indexing Any document (type: %s) to index %s with %d field mappings", 
-                         anyDocument.getTypeUrl(), indexName, fieldMappings.size());
-                
-                return IndexAnyDocumentResponse.newBuilder()
-                    .setSuccess(true)
-                    .setDocumentId(documentId)
-                    .setMessage("Any document indexed successfully with field mappings")
-                    .build();
+                String jsonDoc = JsonFormat.printer().print(mappedDocument);
+                String routing = request.hasRouting() ? request.getRouting() : null;
+
+                return new IndexingContext(indexName, documentId, jsonDoc, routing);
             } catch (InvalidProtocolBufferException e) {
                 LOG.errorf(e, "Failed to unpack Any document");
-                return IndexAnyDocumentResponse.newBuilder()
-                    .setSuccess(false)
-                    .setMessage("Failed to unpack Any document: " + e.getMessage())
-                    .build();
-            } catch (Exception e) {
-                LOG.errorf(e, "Failed to index Any document");
-                return IndexAnyDocumentResponse.newBuilder()
-                    .setSuccess(false)
-                    .setMessage("Failed to index Any document: " + e.getMessage())
-                    .build();
+                throw new RuntimeException("Failed to unpack Any document: " + e.getMessage(), e);
             }
+        })
+        .onFailure().recoverWithItem(e -> {
+            LOG.errorf(e, "Failed to prepare Any document for indexing");
+            return new IndexingContext(null, null, null, null, e);
+        })
+        .flatMap(ctx -> {
+            if (ctx.error != null) {
+                return Uni.createFrom().item(IndexAnyDocumentResponse.newBuilder()
+                    .setSuccess(false)
+                    .setMessage("Failed to index Any document: " + ctx.error.getMessage())
+                    .build());
+            }
+            return indexDocumentToOpenSearch(ctx.indexName, ctx.documentId, ctx.jsonDoc, ctx.routing)
+                .map(success -> IndexAnyDocumentResponse.newBuilder()
+                    .setSuccess(success)
+                    .setDocumentId(ctx.documentId)
+                    .setMessage(success ? "Any document indexed successfully" : "Failed to index Any document")
+                    .build());
         });
+    }
+
+    private static String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
+    }
+
+    private static final class IndexingContext {
+        final String indexName;
+        final String documentId;
+        final String jsonDoc;
+        final String routing;
+        final Throwable error;
+
+        IndexingContext(String indexName, String documentId, String jsonDoc, String routing) {
+            this(indexName, documentId, jsonDoc, routing, null);
+        }
+
+        IndexingContext(String indexName, String documentId, String jsonDoc, String routing, Throwable error) {
+            this.indexName = indexName;
+            this.documentId = documentId;
+            this.jsonDoc = jsonDoc;
+            this.routing = routing;
+            this.error = error;
+        }
     }
 
     @Override
