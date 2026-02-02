@@ -3,6 +3,7 @@ package ai.pipestream.schemamanager;
 import ai.pipestream.opensearch.v1.*;
 import ai.pipestream.schemamanager.entity.EmbeddingModelConfig;
 import ai.pipestream.schemamanager.entity.IndexEmbeddingBinding;
+import ai.pipestream.schemamanager.kafka.SemanticMetadataEventProducer;
 import com.google.protobuf.Struct;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
@@ -25,6 +26,12 @@ public class EmbeddingConfigServiceImpl extends MutinyEmbeddingConfigServiceGrpc
 
     private static final Logger LOG = Logger.getLogger(EmbeddingConfigServiceImpl.class);
 
+    private final SemanticMetadataEventProducer eventProducer;
+
+    public EmbeddingConfigServiceImpl(SemanticMetadataEventProducer eventProducer) {
+        this.eventProducer = eventProducer;
+    }
+
     // --- EmbeddingModelConfig CRUD ---
 
     @Override
@@ -44,6 +51,7 @@ public class EmbeddingConfigServiceImpl extends MutinyEmbeddingConfigServiceGrpc
                     .replaceWith(entity);
         })
                 .onItem().transform(this::toEmbeddingModelConfigProto)
+                .call(config -> eventProducer.publishEmbeddingModelConfigCreated(config))
                 .map(config -> CreateEmbeddingModelConfigResponse.newBuilder().setConfig(config).build());
     }
 
@@ -73,28 +81,36 @@ public class EmbeddingConfigServiceImpl extends MutinyEmbeddingConfigServiceGrpc
                                 .asRuntimeException());
                     }
                     EmbeddingModelConfig entity = (EmbeddingModelConfig) e;
+                    ai.pipestream.opensearch.v1.EmbeddingModelConfig previous = toEmbeddingModelConfigProto(entity);
                     if (request.hasName()) entity.name = request.getName();
                     if (request.hasModelIdentifier()) entity.modelIdentifier = request.getModelIdentifier();
                     if (request.hasDimensions()) entity.dimensions = request.getDimensions();
                     if (request.hasMetadata()) entity.metadata = structToJson(request.getMetadata());
-                    return entity.persist().replaceWith(entity);
+                    return entity.persist()
+                            .replaceWith(Uni.createFrom().item(new Object[] { previous, entity }));
                 }))
-                .onItem().transform(e -> UpdateEmbeddingModelConfigResponse.newBuilder()
-                        .setConfig(toEmbeddingModelConfigProto((EmbeddingModelConfig) e)).build());
+                .onItem().transformToUni(pair -> {
+                    var previous = (ai.pipestream.opensearch.v1.EmbeddingModelConfig) ((Object[]) pair)[0];
+                    var entity = (EmbeddingModelConfig) ((Object[]) pair)[1];
+                    var current = toEmbeddingModelConfigProto(entity);
+                    return eventProducer.publishEmbeddingModelConfigUpdated(previous, current)
+                            .replaceWith(UpdateEmbeddingModelConfigResponse.newBuilder().setConfig(current).build());
+                });
     }
 
     @Override
     @WithTransaction
     public Uni<DeleteEmbeddingModelConfigResponse> deleteEmbeddingModelConfig(DeleteEmbeddingModelConfigRequest request) {
-        return Panache.withTransaction(() -> EmbeddingModelConfig.findById(request.getId()))
+        return Panache.withTransaction(() -> EmbeddingModelConfig.findById(request.getId())
                 .onItem().transformToUni(e -> e != null
                         ? ((EmbeddingModelConfig) e).delete()
                                 .replaceWith(DeleteEmbeddingModelConfigResponse.newBuilder()
                                         .setSuccess(true)
                                         .setMessage("Deleted").build())
+                                .call(() -> eventProducer.publishEmbeddingModelConfigDeleted(request.getId()))
                         : Uni.createFrom().item(DeleteEmbeddingModelConfigResponse.newBuilder()
                                 .setSuccess(false)
-                                .setMessage("Not found: " + request.getId()).build()));
+                                .setMessage("Not found: " + request.getId()).build())));
     }
 
     @Override
@@ -139,8 +155,9 @@ public class EmbeddingConfigServiceImpl extends MutinyEmbeddingConfigServiceGrpc
                     entity.resultSetName = request.hasResultSetName() ? request.getResultSetName() : null;
                     return entity.persist().replaceWith(entity);
                 }))
-                .onItem().transform(e -> CreateIndexEmbeddingBindingResponse.newBuilder()
-                        .setBinding(toIndexEmbeddingBindingProto((IndexEmbeddingBinding) e)).build());
+                .onItem().transform(e -> toIndexEmbeddingBindingProto((IndexEmbeddingBinding) e))
+                .call(binding -> eventProducer.publishIndexEmbeddingBindingCreated(binding))
+                .map(binding -> CreateIndexEmbeddingBindingResponse.newBuilder().setBinding(binding).build());
     }
 
     @Override
@@ -169,6 +186,7 @@ public class EmbeddingConfigServiceImpl extends MutinyEmbeddingConfigServiceGrpc
                                 .asRuntimeException());
                     }
                     IndexEmbeddingBinding entity = (IndexEmbeddingBinding) b;
+                    ai.pipestream.opensearch.v1.IndexEmbeddingBinding previous = toIndexEmbeddingBindingProto(entity);
                     if (request.hasIndexName()) entity.indexName = request.getIndexName();
                     if (request.hasFieldName()) entity.fieldName = request.getFieldName();
                     if (request.hasResultSetName()) entity.resultSetName = request.getResultSetName();
@@ -181,27 +199,33 @@ public class EmbeddingConfigServiceImpl extends MutinyEmbeddingConfigServiceGrpc
                                                 .asRuntimeException());
                                     }
                                     entity.embeddingModelConfig = (EmbeddingModelConfig) emc;
-                                    return entity.persist().replaceWith(entity);
+                                    return entity.persist().replaceWith(Uni.createFrom().item(new Object[] { previous, entity }));
                                 });
                     }
-                    return entity.persist().replaceWith(entity);
+                    return entity.persist().replaceWith(Uni.createFrom().item(new Object[] { previous, entity }));
                 }))
-                .onItem().transform(e -> UpdateIndexEmbeddingBindingResponse.newBuilder()
-                        .setBinding(toIndexEmbeddingBindingProto((IndexEmbeddingBinding) e)).build());
+                .onItem().transformToUni(pair -> {
+                    var previous = (ai.pipestream.opensearch.v1.IndexEmbeddingBinding) ((Object[]) pair)[0];
+                    var entity = (IndexEmbeddingBinding) ((Object[]) pair)[1];
+                    var current = toIndexEmbeddingBindingProto(entity);
+                    return eventProducer.publishIndexEmbeddingBindingUpdated(previous, current)
+                            .replaceWith(UpdateIndexEmbeddingBindingResponse.newBuilder().setBinding(current).build());
+                });
     }
 
     @Override
     @WithTransaction
     public Uni<DeleteIndexEmbeddingBindingResponse> deleteIndexEmbeddingBinding(DeleteIndexEmbeddingBindingRequest request) {
-        return Panache.withTransaction(() -> IndexEmbeddingBinding.findById(request.getId()))
+        return Panache.withTransaction(() -> IndexEmbeddingBinding.findById(request.getId())
                 .onItem().transformToUni(b -> b != null
                         ? ((IndexEmbeddingBinding) b).delete()
                                 .replaceWith(DeleteIndexEmbeddingBindingResponse.newBuilder()
                                         .setSuccess(true)
                                         .setMessage("Deleted").build())
+                                .call(() -> eventProducer.publishIndexEmbeddingBindingDeleted(request.getId()))
                         : Uni.createFrom().item(DeleteIndexEmbeddingBindingResponse.newBuilder()
                                 .setSuccess(false)
-                                .setMessage("Not found: " + request.getId()).build()));
+                                .setMessage("Not found: " + request.getId()).build())));
     }
 
     @Override

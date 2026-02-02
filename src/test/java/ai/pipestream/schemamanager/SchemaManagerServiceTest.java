@@ -1,5 +1,8 @@
 package ai.pipestream.schemamanager;
 
+import ai.pipestream.opensearch.v1.CreateEmbeddingModelConfigRequest;
+import ai.pipestream.opensearch.v1.CreateIndexEmbeddingBindingRequest;
+import ai.pipestream.opensearch.v1.MutinyEmbeddingConfigServiceGrpc;
 import ai.pipestream.opensearch.v1.MutinyOpenSearchManagerServiceGrpc;
 import ai.pipestream.schemamanager.v1.EnsureNestedEmbeddingsFieldExistsRequest;
 import ai.pipestream.schemamanager.v1.KnnMethodDefinition;
@@ -27,6 +30,9 @@ class SchemaManagerServiceTest {
 
     @GrpcClient
     MutinyOpenSearchManagerServiceGrpc.MutinyOpenSearchManagerServiceStub openSearchManagerService;
+
+    @GrpcClient
+    MutinyEmbeddingConfigServiceGrpc.MutinyEmbeddingConfigServiceStub embeddingConfigClient;
 
     @Test
     void testEnsureNestedEmbeddingsFieldExists() {
@@ -87,5 +93,41 @@ class SchemaManagerServiceTest {
 
         // Second call should find existing schema (from cache)
         assertTrue(response2.getSchemaExisted());
+    }
+
+    @Test
+    void testEnsureNestedEmbeddingsFieldExists_resolvesDimensionsFromBinding() {
+        String indexName = "test-index-binding-" + UUID.randomUUID();
+        String fieldName = "embeddings_384";
+
+        // Create embedding config and binding so dimensions can be resolved from DB
+        var createConfigResp = embeddingConfigClient.createEmbeddingModelConfig(
+                CreateEmbeddingModelConfigRequest.newBuilder()
+                        .setName("binding-test-model-" + UUID.randomUUID())
+                        .setModelIdentifier("test/model")
+                        .setDimensions(384)
+                        .build()
+        ).await().indefinitely();
+        String configId = createConfigResp.getConfig().getId();
+
+        embeddingConfigClient.createIndexEmbeddingBinding(
+                CreateIndexEmbeddingBindingRequest.newBuilder()
+                        .setIndexName(indexName)
+                        .setEmbeddingModelConfigId(configId)
+                        .setFieldName(fieldName)
+                        .build()
+        ).await().indefinitely();
+
+        // Call without vector_field_definition - should resolve from binding
+        var request = EnsureNestedEmbeddingsFieldExistsRequest.newBuilder()
+                .setIndexName(indexName)
+                .setNestedFieldName(fieldName)
+                .build();
+
+        var response = openSearchManagerService.ensureNestedEmbeddingsFieldExists(request)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertThat("Schema should be created", response.getSchemaExisted(), is(false));
     }
 }

@@ -30,6 +30,9 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
     OpenSearchSchemaService openSearchClient;
 
     @Inject
+    EmbeddingBindingResolver embeddingBindingResolver;
+
+    @Inject
     org.opensearch.client.opensearch.OpenSearchAsyncClient openSearchAsyncClient;
 
     @Inject
@@ -39,9 +42,29 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
     public Uni<EnsureNestedEmbeddingsFieldExistsResponse> ensureNestedEmbeddingsFieldExists(EnsureNestedEmbeddingsFieldExistsRequest request) {
         final String indexName = request.getIndexName();
         final String fieldName = request.getNestedFieldName();
-        
-        LOG.infof("Ensuring nested embeddings field '%s' exists in index '%s'", fieldName, indexName);
-        
+
+        return resolveVectorFieldDefinition(request)
+                .onItem().transformToUni(vectorDef -> {
+                    if (vectorDef == null) {
+                        return Uni.createFrom().failure(new IllegalArgumentException(
+                                "Vector dimensions required: either provide vector_field_definition with dimension > 0, " +
+                                        "or create an IndexEmbeddingBinding for index='" + indexName + "' field='" + fieldName + "'"));
+                    }
+                    return doEnsureNestedEmbeddingsFieldExists(indexName, fieldName, vectorDef);
+                });
+    }
+
+    private Uni<ai.pipestream.schemamanager.v1.VectorFieldDefinition> resolveVectorFieldDefinition(EnsureNestedEmbeddingsFieldExistsRequest request) {
+        if (request.hasVectorFieldDefinition() && request.getVectorFieldDefinition().getDimension() > 0) {
+            return Uni.createFrom().item(request.getVectorFieldDefinition());
+        }
+        return embeddingBindingResolver.resolve(request.getIndexName(), request.getNestedFieldName());
+    }
+
+    private Uni<EnsureNestedEmbeddingsFieldExistsResponse> doEnsureNestedEmbeddingsFieldExists(
+            String indexName, String fieldName, VectorFieldDefinition vectorDef) {
+        LOG.infof("Ensuring nested embeddings field '%s' exists in index '%s' (dimensions=%d)", fieldName, indexName, vectorDef.getDimension());
+
         // First check if the mapping already exists
         return openSearchClient.nestedMappingExists(indexName, fieldName)
                 .onItem().transformToUni(exists -> {
@@ -51,7 +74,7 @@ public class OpenSearchManagerService extends MutinyOpenSearchManagerServiceGrpc
                     } else {
                         LOG.infof("Creating nested field '%s' in index '%s'", fieldName, indexName);
                         // Try to create the mapping
-                        return openSearchClient.createIndexWithNestedMapping(indexName, fieldName, request.getVectorFieldDefinition())
+                        return openSearchClient.createIndexWithNestedMapping(indexName, fieldName, vectorDef)
                                 .onItem().transformToUni(success -> {
                                     if (success) {
                                         LOG.infof("Successfully created nested field '%s' in index '%s'", fieldName, indexName);

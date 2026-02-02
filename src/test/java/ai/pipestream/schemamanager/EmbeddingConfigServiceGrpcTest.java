@@ -167,4 +167,86 @@ class EmbeddingConfigServiceGrpcTest {
                 ).await().indefinitely()
         );
     }
+
+    // --- Full CRUD for IndexEmbeddingBinding (step 3.5) ---
+
+    @Test
+    void updateAndDeleteIndexEmbeddingBinding() {
+        String configName = "crud-binding-model-" + UUID.randomUUID();
+        var createConfigResp = embeddingConfigClient.createEmbeddingModelConfig(
+                CreateEmbeddingModelConfigRequest.newBuilder()
+                        .setName(configName)
+                        .setModelIdentifier("test/model")
+                        .setDimensions(384)
+                        .build()
+        ).await().indefinitely();
+        String configId = createConfigResp.getConfig().getId();
+
+        String indexName = "crud-index-" + UUID.randomUUID();
+        String fieldName = "embeddings_384";
+
+        var createBindingResp = embeddingConfigClient.createIndexEmbeddingBinding(
+                CreateIndexEmbeddingBindingRequest.newBuilder()
+                        .setIndexName(indexName)
+                        .setEmbeddingModelConfigId(configId)
+                        .setFieldName(fieldName)
+                        .setResultSetName("default")
+                        .build()
+        ).await().indefinitely();
+        String bindingId = createBindingResp.getBinding().getId();
+
+        var updateResp = embeddingConfigClient.updateIndexEmbeddingBinding(
+                UpdateIndexEmbeddingBindingRequest.newBuilder()
+                        .setId(bindingId)
+                        .setResultSetName("updated-result-set")
+                        .build()
+        ).await().indefinitely();
+        assertThat(updateResp.getBinding().getResultSetName(), equalTo("updated-result-set"));
+
+        var deleteResp = embeddingConfigClient.deleteIndexEmbeddingBinding(
+                DeleteIndexEmbeddingBindingRequest.newBuilder().setId(bindingId).build()
+        ).await().indefinitely();
+        assertThat(deleteResp.getSuccess(), is(true));
+
+        assertThrows(StatusRuntimeException.class, () ->
+                embeddingConfigClient.getIndexEmbeddingBinding(
+                        GetIndexEmbeddingBindingRequest.newBuilder().setId(bindingId).build()
+                ).await().indefinitely()
+        );
+
+        embeddingConfigClient.deleteEmbeddingModelConfig(
+                DeleteEmbeddingModelConfigRequest.newBuilder().setId(configId).build()
+        ).await().indefinitely();
+    }
+
+    @Test
+    void listIndexEmbeddingBindings_byIndex() {
+        String configName = "list-model-" + UUID.randomUUID();
+        var createConfigResp = embeddingConfigClient.createEmbeddingModelConfig(
+                CreateEmbeddingModelConfigRequest.newBuilder()
+                        .setName(configName)
+                        .setModelIdentifier("list/model")
+                        .setDimensions(384)
+                        .build()
+        ).await().indefinitely();
+        String configId = createConfigResp.getConfig().getId();
+
+        String indexName = "list-index-" + UUID.randomUUID();
+        embeddingConfigClient.createIndexEmbeddingBinding(
+                CreateIndexEmbeddingBindingRequest.newBuilder()
+                        .setIndexName(indexName)
+                        .setEmbeddingModelConfigId(configId)
+                        .setFieldName("embeddings_384")
+                        .build()
+        ).await().indefinitely();
+
+        var listResp = embeddingConfigClient.listIndexEmbeddingBindings(
+                ListIndexEmbeddingBindingsRequest.newBuilder()
+                        .setIndexName(indexName)
+                        .setPageSize(10)
+                        .build()
+        ).await().indefinitely();
+        assertThat(listResp.getBindingsList(), notNullValue());
+        assertThat(listResp.getBindingsList().stream().anyMatch(b -> indexName.equals(b.getIndexName())), is(true));
+    }
 }
