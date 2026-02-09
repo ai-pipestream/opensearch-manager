@@ -16,7 +16,7 @@ rootProject.name = 'opensearch-manager'
 dependencyResolutionManagement {
     versionCatalogs {
         libs {
-            from("ai.pipestream:pipestream-bom-catalog:0.7.20")
+            from("ai.pipestream:pipestream-bom-catalog:0.7.21-SNAPSHOT")
         }
     }
 
