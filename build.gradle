@@ -52,10 +52,8 @@ dependencies {
 
     // Core Quarkus dependencies
     implementation libs.quarkus.arc
-    implementation libs.quarkus.rest
     implementation libs.quarkus.rest.jackson
     implementation libs.quarkus.grpc
-    implementation 'io.quarkus:quarkus-smallrye-health'
     implementation 'io.quarkus:quarkus-smallrye-stork'
     implementation 'io.quarkus:quarkus-messaging-kafka'
     implementation 'io.quarkus:quarkus-jdbc-postgresql'
