@@ -12,7 +12,8 @@ import ai.pipestream.repository.v1.ModuleUpdateNotification;
 import ai.pipestream.repository.v1.PipeDocUpdateNotification;
 import ai.pipestream.repository.v1.ProcessRequestUpdateNotification;
 import ai.pipestream.repository.v1.ProcessResponseUpdateNotification;
-import ai.pipestream.config.v1.GraphUpdateNotification;
+import ai.pipestream.engine.v1.GraphUpdateEvent;
+import ai.pipestream.engine.v1.GraphUpdateEventKind;
 import ai.pipestream.schemamanager.opensearch.OpenSearchIndexingService;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -173,25 +174,26 @@ public class RepositoryUpdateConsumer {
     }
     
     @Incoming("graph-updates-in")
-    public Uni<Void> consumeGraphUpdate(Message<GraphUpdateNotification> message) {
-        GraphUpdateNotification notification = message.getPayload();
-        LOG.infof("Received graph update: type=%s, clusterId=%s", 
-                notification.getUpdateType(), notification.getClusterId());
-        
+    public Uni<Void> consumeGraphUpdate(Message<GraphUpdateEvent> message) {
+        GraphUpdateEvent event = message.getPayload();
+        LOG.infof("Received graph update event: kind=%s, graphId=%s, clusterId=%s, version=%s",
+                event.getUpdateKind(), event.getGraphId(), event.getClusterId(), event.getVersion());
+
+        // The graph-updates topic now carries engine cache-reload events, not full graph payloads.
+        // Acknowledge on success and keep this consumer as a no-op placeholder for now.
         return Uni.createFrom().deferred(() -> {
-            // Handle different graph update types
-            if (notification.hasNode()) {
-                return indexingService.indexGraphNode(notification.getNode(), notification.getClusterId());
-            } else if (notification.hasEdge()) {
-                return indexingService.indexGraphEdge(notification.getEdge(), notification.getClusterId());
-            } else if (notification.hasGraph()) {
-                return indexingService.indexGraph(notification.getGraph());
+            if (event.getUpdateKind() == GraphUpdateEventKind.GRAPH_UPDATE_EVENT_KIND_DEACTIVATED) {
+                LOG.debugf("Ignoring deactivated graph update in opensearch-manager: graph=%s cluster=%s",
+                        event.getGraphId(), event.getClusterId());
+            } else if (event.getUpdateKind() == GraphUpdateEventKind.GRAPH_UPDATE_EVENT_KIND_ACTIVATED) {
+                LOG.debugf("Ignoring activated graph update in opensearch-manager: graph=%s cluster=%s version=%s",
+                        event.getGraphId(), event.getClusterId(), event.getVersion());
             }
             return Uni.createFrom().voidItem();
         })
         .onItemOrFailure().transformToUni((result, error) -> {
             if (error != null) {
-                LOG.errorf(error, "Failed to process graph update for cluster %s", notification.getClusterId());
+                LOG.errorf(error, "Failed to process graph update event for graph %s cluster %s", event.getGraphId(), event.getClusterId());
                 return Uni.createFrom().failure(error);
             }
             return Uni.createFrom().completionStage(message.ack());
