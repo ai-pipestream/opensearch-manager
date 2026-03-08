@@ -60,6 +60,11 @@ When running, the service provides:
 - **OpenAPI/Swagger**: http://localhost:38002/q/swagger-ui
 - **Dev UI**: http://localhost:38002/q/dev
 
+For the current service defaults in this repository, see:
+- **HTTP API (dev default)**: http://localhost:18103/opensearch-manager
+- **Health Check**: http://localhost:18103/opensearch-manager/q/health
+- **OpenAPI/Swagger**: http://localhost:18103/opensearch-manager/q/swagger-ui
+
 ## Dev Services
 
 The following services are automatically started in development mode:
@@ -146,6 +151,13 @@ The service provides health checks at:
 - `/q/health` - Overall health
 - `/q/health/live` - Liveness probe
 - `/q/health/ready` - Readiness probe
+
+## Semantic Layer Documentation
+
+For semantic-layer onboarding and LLM-assisted edits, use:
+- `docs/SEMANTIC_LAYER_END_TO_END_FOR_LLM.md` (single-page end-to-end guide)
+- `docs/IMPLEMENTATION_PLAN.md` (current implementation status and open work)
+- `pipestream-engine/docs/architecture/12-semantic-config-vectorset.md` (cross-repo semantic contract)
 
 ## Architecture
 

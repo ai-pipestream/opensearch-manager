@@ -7,8 +7,8 @@ import ai.pipestream.opensearch.v1.MutinyOpenSearchManagerServiceGrpc;
 import ai.pipestream.schemamanager.v1.EnsureNestedEmbeddingsFieldExistsRequest;
 import ai.pipestream.schemamanager.v1.KnnMethodDefinition;
 import ai.pipestream.schemamanager.v1.VectorFieldDefinition;
-import ai.pipestream.test.support.OpensearchContainerTestResource;
 import ai.pipestream.test.support.OpensearchWireMockTestResource;
+import ai.pipestream.test.support.OpensearchConsulTestResource;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 @QuarkusTestResource(OpensearchWireMockTestResource.class)
-@QuarkusTestResource(OpensearchContainerTestResource.class)
+@QuarkusTestResource(OpensearchConsulTestResource.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SchemaManagerServiceTest {
 
@@ -93,6 +93,55 @@ class SchemaManagerServiceTest {
 
         // Second call should find existing schema (from cache)
         assertTrue(response2.getSchemaExisted());
+    }
+
+    @Test
+    void testEnsureNestedEmbeddingsFieldExistsUpdatesExistingIndexWithNewField() {
+        String indexName = "test-index-update-field-" + UUID.randomUUID();
+
+        var request384 = EnsureNestedEmbeddingsFieldExistsRequest.newBuilder()
+                .setIndexName(indexName)
+                .setNestedFieldName("embeddings_384")
+                .setVectorFieldDefinition(VectorFieldDefinition.newBuilder()
+                        .setDimension(384)
+                        .setKnnMethod(KnnMethodDefinition.newBuilder()
+                                .setEngine(KnnMethodDefinition.KnnEngine.KNN_ENGINE_UNSPECIFIED)
+                                .setSpaceType(KnnMethodDefinition.SpaceType.SPACE_TYPE_COSINESIMIL)
+                                .build())
+                        .build())
+                .build();
+
+        var request768 = EnsureNestedEmbeddingsFieldExistsRequest.newBuilder()
+                .setIndexName(indexName)
+                .setNestedFieldName("embeddings_768")
+                .setVectorFieldDefinition(VectorFieldDefinition.newBuilder()
+                        .setDimension(768)
+                        .setKnnMethod(KnnMethodDefinition.newBuilder()
+                                .setEngine(KnnMethodDefinition.KnnEngine.KNN_ENGINE_UNSPECIFIED)
+                                .setSpaceType(KnnMethodDefinition.SpaceType.SPACE_TYPE_COSINESIMIL)
+                                .build())
+                        .build())
+                .build();
+
+        var response384 = openSearchManagerService.ensureNestedEmbeddingsFieldExists(request384)
+                .await().indefinitely();
+        assertNotNull(response384);
+        assertThat(response384.getSchemaExisted(), is(false));
+
+        var response768 = openSearchManagerService.ensureNestedEmbeddingsFieldExists(request768)
+                .await().indefinitely();
+        assertNotNull(response768);
+        assertThat(response768.getSchemaExisted(), is(false));
+
+        var response384Again = openSearchManagerService.ensureNestedEmbeddingsFieldExists(request384)
+                .await().indefinitely();
+        var response768Again = openSearchManagerService.ensureNestedEmbeddingsFieldExists(request768)
+                .await().indefinitely();
+
+        assertNotNull(response384Again);
+        assertNotNull(response768Again);
+        assertTrue(response384Again.getSchemaExisted());
+        assertTrue(response768Again.getSchemaExisted());
     }
 
     @Test

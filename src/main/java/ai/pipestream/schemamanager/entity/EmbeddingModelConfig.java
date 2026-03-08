@@ -28,8 +28,8 @@ public class EmbeddingModelConfig extends PanacheEntityBase {
     @Column(name = "model_identifier", nullable = false)
     public String modelIdentifier;
 
-    @Column(name = "dimensions")
-    public Integer dimensions;
+    @Column(name = "dimensions", nullable = false)
+    public int dimensions;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)

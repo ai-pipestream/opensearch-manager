@@ -3,6 +3,7 @@ package ai.pipestream.schemamanager;
 import ai.pipestream.opensearch.v1.*;
 import ai.pipestream.schemamanager.entity.EmbeddingModelConfig;
 import ai.pipestream.schemamanager.entity.IndexEmbeddingBinding;
+import ai.pipestream.schemamanager.entity.VectorSetEntity;
 import ai.pipestream.schemamanager.kafka.SemanticMetadataEventProducer;
 import com.google.protobuf.Struct;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -38,6 +39,16 @@ public class EmbeddingConfigServiceImpl extends MutinyEmbeddingConfigServiceGrpc
     @Override
     @WithTransaction
     public Uni<CreateEmbeddingModelConfigResponse> createEmbeddingModelConfig(CreateEmbeddingModelConfigRequest request) {
+        if (!request.hasDimensions() || request.getDimensions() <= 0) {
+            return Uni.createFrom().failure(Status.INVALID_ARGUMENT
+                    .withDescription("dimensions is required and must be > 0")
+                    .asRuntimeException());
+        }
+        if (request.getName().isBlank()) {
+            return Uni.createFrom().failure(Status.INVALID_ARGUMENT
+                    .withDescription("name is required")
+                    .asRuntimeException());
+        }
         return Panache.withTransaction(() -> {
             String id = request.hasId() && !request.getId().isBlank()
                     ? request.getId()
@@ -46,7 +57,7 @@ public class EmbeddingConfigServiceImpl extends MutinyEmbeddingConfigServiceGrpc
             entity.id = id;
             entity.name = request.getName();
             entity.modelIdentifier = request.getModelIdentifier();
-            entity.dimensions = request.hasDimensions() ? request.getDimensions() : null;
+            entity.dimensions = request.getDimensions();
             entity.metadata = request.hasMetadata() ? structToJson(request.getMetadata()) : null;
             return entity.persist()
                     .replaceWith(entity);
@@ -103,15 +114,30 @@ public class EmbeddingConfigServiceImpl extends MutinyEmbeddingConfigServiceGrpc
     @WithTransaction
     public Uni<DeleteEmbeddingModelConfigResponse> deleteEmbeddingModelConfig(DeleteEmbeddingModelConfigRequest request) {
         return Panache.withTransaction(() -> EmbeddingModelConfig.findById(request.getId())
-                .onItem().transformToUni(e -> e != null
-                        ? ((EmbeddingModelConfig) e).delete()
-                                .replaceWith(DeleteEmbeddingModelConfigResponse.newBuilder()
-                                        .setSuccess(true)
-                                        .setMessage("Deleted").build())
-                                .call(() -> eventProducer.publishEmbeddingModelConfigDeleted(request.getId()))
-                        : Uni.createFrom().item(DeleteEmbeddingModelConfigResponse.newBuilder()
+                .onItem().transformToUni(e -> {
+                    if (e == null) {
+                        return Uni.createFrom().item(DeleteEmbeddingModelConfigResponse.newBuilder()
                                 .setSuccess(false)
-                                .setMessage("Not found: " + request.getId()).build())));
+                                .setMessage("Not found: " + request.getId()).build());
+                    }
+                    // Check VectorSet references before deleting
+                    return VectorSetEntity.findByEmbeddingModelConfigId(request.getId())
+                            .onItem().transformToUni(refs -> {
+                                if (!refs.isEmpty()) {
+                                    return Uni.createFrom().<DeleteEmbeddingModelConfigResponse>failure(
+                                            Status.FAILED_PRECONDITION
+                                                    .withDescription(String.format(
+                                                            "Cannot delete embedding model config '%s': referenced by %d VectorSet(s)",
+                                                            request.getId(), refs.size()))
+                                                    .asRuntimeException());
+                                }
+                                return ((EmbeddingModelConfig) e).delete()
+                                        .replaceWith(DeleteEmbeddingModelConfigResponse.newBuilder()
+                                                .setSuccess(true)
+                                                .setMessage("Deleted").build())
+                                        .call(() -> eventProducer.publishEmbeddingModelConfigDeleted(request.getId()));
+                            });
+                }));
     }
 
     @Override
@@ -261,7 +287,7 @@ public class EmbeddingConfigServiceImpl extends MutinyEmbeddingConfigServiceGrpc
                 .setId(e.id)
                 .setName(e.name)
                 .setModelIdentifier(e.modelIdentifier);
-        if (e.dimensions != null) b.setDimensions(e.dimensions);
+        b.setDimensions(e.dimensions);
         if (e.createdAt != null) b.setCreatedAt(toTimestamp(e.createdAt));
         if (e.updatedAt != null) b.setUpdatedAt(toTimestamp(e.updatedAt));
         if (e.metadata != null && !e.metadata.isBlank()) {

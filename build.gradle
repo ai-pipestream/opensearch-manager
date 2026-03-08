@@ -66,6 +66,8 @@ dependencies {
     // Quarkus Apicurio Registry Protobuf Extension (Zero-Config)
     // Version managed by pipestream-bom
     implementation 'ai.pipestream:quarkus-apicurio-registry-protobuf'
+    implementation "ai.pipestream:pipestream-descriptor-api:${pipestreamBomVersion}"
+    implementation "ai.pipestream:pipestream-descriptor-apicurio:${pipestreamBomVersion}"
 
     // Service discovery and registration with Consul
     implementation 'io.smallrye.stork:stork-service-discovery-consul'
@@ -84,7 +86,8 @@ dependencies {
 
     // Testing
     testImplementation platform("ai.pipestream:pipestream-bom:${pipestreamBomVersion}")
-    testImplementation libs.quarkus.junit5
+    testImplementation 'io.quarkus:quarkus-junit5-mockito'
+    testImplementation 'io.quarkus:quarkus-panache-mock'
     testImplementation 'io.quarkus:quarkus-test-vertx'
     testImplementation libs.rest.assured
     testImplementation "ai.pipestream:pipestream-test-support:${pipestreamBomVersion}"

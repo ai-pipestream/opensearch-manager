@@ -10,6 +10,7 @@ import org.apache.hc.client5.http.HttpHostConnectException;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.indices.ExistsRequest;
 import org.opensearch.client.opensearch.indices.GetMappingResponse;
+import org.opensearch.client.opensearch.indices.PutMappingRequest;
 import org.opensearch.client.opensearch.indices.IndexSettings;
 import org.opensearch.client.opensearch._types.mapping.KnnVectorProperty;
 import org.opensearch.client.opensearch._types.mapping.NestedProperty;
@@ -65,32 +66,28 @@ public class OpenSearchSchemaServiceImpl implements OpenSearchSchemaService {
         return Uni.createFrom().item(() -> {
             try {
                 var settings = new IndexSettings.Builder().knn(true).build();
+                TypeMapping mapping = buildNestedFieldMapping(nestedFieldName, vectorFieldDefinition);
 
-                var mapping = new TypeMapping.Builder()
-                    .properties(nestedFieldName, Property.of(property -> property
-                        .nested(NestedProperty.of(nested -> nested
-                            .properties(Map.of(
-                                "vector", Property.of(p -> p.knnVector(createKnnVectorProperty(vectorFieldDefinition))),
-                                "source_text", Property.of(p -> p.text(TextProperty.of(t -> t))),
-                                "context_text", Property.of(p -> p.text(TextProperty.of(t -> t))),
-                                "chunk_config_id", Property.of(p -> p.keyword(k -> k)),
-                                "embedding_id", Property.of(p -> p.keyword(k -> k)),
-                                "is_primary", Property.of(p -> p.boolean_(b -> b))
-                            ))
-                        ))
-                    ))
-                    .build();
+                if (indexExists(indexName)) {
+                    return putNestedFieldMapping(indexName, mapping);
+                }
 
                 var createRequest = new org.opensearch.client.opensearch.indices.CreateIndexRequest.Builder()
-                    .index(indexName)
-                    .settings(settings)
-                    .mappings(mapping)
-                    .build();
+                        .index(indexName)
+                        .settings(settings)
+                        .mappings(mapping)
+                        .build();
 
-                var response = client.indices().create(createRequest);
-                return response.acknowledged();
+                return client.indices().create(createRequest).acknowledged();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                if (isIndexExistsError(e)) {
+                    try {
+                        return putNestedFieldMapping(indexName, buildNestedFieldMapping(nestedFieldName, vectorFieldDefinition));
+                    } catch (IOException ioException) {
+                        throw new RuntimeException("Failed to add nested field mapping for index " + indexName + " field " + nestedFieldName, ioException);
+                    }
+                }
+                throw new RuntimeException("Failed to create nested mapping for index " + indexName + " field " + nestedFieldName, e);
             }
         })
         .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
@@ -99,7 +96,44 @@ public class OpenSearchSchemaServiceImpl implements OpenSearchSchemaService {
         .withBackOff(Duration.ofMillis(250), Duration.ofSeconds(3))
         .atMost(6);
     }
-    
+
+    private TypeMapping buildNestedFieldMapping(String nestedFieldName, VectorFieldDefinition vectorFieldDefinition) {
+        return new TypeMapping.Builder()
+                .properties(nestedFieldName, Property.of(property -> property
+                        .nested(NestedProperty.of(nested -> nested
+                                .properties(Map.of(
+                                        "vector", Property.of(p -> p.knnVector(createKnnVectorProperty(vectorFieldDefinition))),
+                                        "source_text", Property.of(p -> p.text(TextProperty.of(t -> t))),
+                                        "context_text", Property.of(p -> p.text(TextProperty.of(t -> t))),
+                                        "chunk_config_id", Property.of(p -> p.keyword(k -> k)),
+                                        "embedding_id", Property.of(p -> p.keyword(k -> k)),
+                                        "is_primary", Property.of(p -> p.boolean_(b -> b))
+                                ))
+                        ))
+                ))
+                .build();
+    }
+
+    private boolean indexExists(String indexName) throws IOException {
+        return client.indices().exists(new ExistsRequest.Builder().index(indexName).build()).value();
+    }
+
+    private boolean isIndexExistsError(Throwable throwable) {
+        if (throwable == null || throwable.getMessage() == null) {
+            return false;
+        }
+        String message = throwable.getMessage().toLowerCase();
+        return message.contains("resource_already_exists_exception") || message.contains("already exists");
+    }
+
+    private boolean putNestedFieldMapping(String indexName, TypeMapping mapping) throws IOException {
+        var putMappingRequest = new PutMappingRequest.Builder()
+                .index(indexName)
+                .properties(mapping.properties())
+                .build();
+        return client.indices().putMapping(putMappingRequest).acknowledged();
+    }
+
     private KnnVectorProperty createKnnVectorProperty(VectorFieldDefinition vectorDef) {
         return KnnVectorProperty.of(knn -> {
             knn.dimension(vectorDef.getDimension());

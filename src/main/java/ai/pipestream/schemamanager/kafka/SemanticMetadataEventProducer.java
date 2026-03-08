@@ -82,6 +82,27 @@ public class SemanticMetadataEventProducer {
         return publish(SemanticMetadataEventType.SEMANTIC_METADATA_EVENT_TYPE_INDEX_EMBEDDING_BINDING_DELETED, entityId, null);
     }
 
+    // --- VectorSet events ---
+
+    public Uni<Void> publishVectorSetCreated(VectorSet vectorSet) {
+        return publish(SemanticMetadataEventType.SEMANTIC_METADATA_EVENT_TYPE_VECTOR_SET_CREATED,
+                vectorSet.getId(),
+                SemanticMetadataEvent.newBuilder().setVectorSet(vectorSet).build());
+    }
+
+    public Uni<Void> publishVectorSetUpdated(VectorSet previous, VectorSet current) {
+        return publish(SemanticMetadataEventType.SEMANTIC_METADATA_EVENT_TYPE_VECTOR_SET_UPDATED,
+                current.getId(),
+                SemanticMetadataEvent.newBuilder()
+                        .setVectorSet(current)
+                        .setPreviousVectorSet(previous)
+                        .build());
+    }
+
+    public Uni<Void> publishVectorSetDeleted(String entityId) {
+        return publish(SemanticMetadataEventType.SEMANTIC_METADATA_EVENT_TYPE_VECTOR_SET_DELETED, entityId, null);
+    }
+
     private Uni<Void> publish(SemanticMetadataEventType eventType, String entityId, SemanticMetadataEvent event) {
         Timestamp now = Timestamp.newBuilder()
                 .setSeconds(Instant.now().getEpochSecond())

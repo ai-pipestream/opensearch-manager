@@ -2,6 +2,7 @@ package ai.pipestream.schemamanager;
 
 import ai.pipestream.opensearch.v1.*;
 import ai.pipestream.schemamanager.entity.ChunkerConfigEntity;
+import ai.pipestream.schemamanager.entity.VectorSetEntity;
 import ai.pipestream.schemamanager.kafka.SemanticMetadataEventProducer;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Struct;
@@ -131,11 +132,23 @@ public class ChunkerConfigServiceImpl extends MutinyChunkerConfigServiceGrpc.Chu
                                         .setSuccess(false)
                                         .setMessage("Not found: " + request.getId()).build());
                             }
-                            return ((ChunkerConfigEntity) e).delete()
-                                    .replaceWith(DeleteChunkerConfigResponse.newBuilder()
-                                            .setSuccess(true)
-                                            .setMessage("Deleted").build())
-                                    .call(() -> eventProducer.publishChunkerConfigDeleted(request.getId()));
+                            // Check VectorSet references before deleting
+                            return VectorSetEntity.findByChunkerConfigId(request.getId())
+                                    .onItem().transformToUni(refs -> {
+                                        if (!refs.isEmpty()) {
+                                            return Uni.createFrom().<DeleteChunkerConfigResponse>failure(
+                                                    Status.FAILED_PRECONDITION
+                                                            .withDescription(String.format(
+                                                                    "Cannot delete chunker config '%s': referenced by %d VectorSet(s)",
+                                                                    request.getId(), refs.size()))
+                                                            .asRuntimeException());
+                                        }
+                                        return ((ChunkerConfigEntity) e).delete()
+                                                .replaceWith(DeleteChunkerConfigResponse.newBuilder()
+                                                        .setSuccess(true)
+                                                        .setMessage("Deleted").build())
+                                                .call(() -> eventProducer.publishChunkerConfigDeleted(request.getId()));
+                                    });
                         }));
     }
 

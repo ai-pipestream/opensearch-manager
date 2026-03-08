@@ -11,11 +11,19 @@ This document tracks the implementation steps for the semantic metadata service 
 - [ ] Wire up gRPC `ChunkerConfigService` implementation
 - [ ] Add grpcurl scripts for ChunkerConfig CRUD
 
-### 2. VectorSet / Semantic Registry (future)
-- [ ] Proto definition for VectorSet (chunker_config_id + embedding_model_config_id + metadata)
-- [ ] DB migration for `vector_set` table
-- [ ] CRUD service and gRPC API
-- [ ] Evolve IndexEmbeddingBinding to reference VectorSet (optional)
+### 2. VectorSet / Semantic Registry — Phase 1 (IN PROGRESS)
+- [x] Proto definition: `vector_set.proto` (VectorSet message + VectorSetService gRPC with CRUD + Resolve)
+- [x] Semantic metadata events: added VECTOR_SET_CREATED/UPDATED/DELETED to `semantic_metadata_events.proto`
+- [x] DB migration: `V4__create_vector_set_table.sql` (FKs to chunker_config + embedding_model_config, no CASCADE)
+- [x] JPA entity: `VectorSetEntity.java` (Panache active-record, ManyToOne eager, static finders)
+- [x] gRPC service: `VectorSetServiceImpl.java` (CRUD + Resolve with "default" fallback)
+- [x] Kafka events: added VectorSet publish methods to `SemanticMetadataEventProducer`
+- [x] In-use protection: ChunkerConfig and EmbeddingModelConfig delete blocked when referenced by VectorSet
+- [x] Resolver update: `EmbeddingBindingResolver` prefers VectorSet over IndexEmbeddingBinding
+- [x] Tests: `VectorSetServiceGrpcTest` (CRUD, resolve, in-use constraints, dimension denormalization)
+- [ ] buf lint + push (deferred — BSR was unreachable during implementation)
+- [ ] Evolve IndexEmbeddingBinding to reference VectorSet (Phase 2)
+- [ ] Deprecate direct IndexEmbeddingBinding creation (Phase 3)
 
 ### 3. CRUD tests for existing entities
 - [x] EmbeddingModelConfig: Create, Get (by ID and name), Update, Delete, List — **EmbeddingConfigServiceGrpcTest** + **EmbeddingConfigEntityTest**
