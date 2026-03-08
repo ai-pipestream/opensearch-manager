@@ -95,6 +95,11 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
 }
 
+// Always re-check SNAPSHOT dependencies (Gradle caches for 24h by default, causing stale artifacts in CI)
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 group = 'ai.pipestream'
 version = "${scmVersion.version}"
 
