@@ -1,6 +1,12 @@
 package ai.pipestream.schemamanager;
 
 import ai.pipestream.opensearch.v1.*;
+import ai.pipestream.repository.filesystem.v1.Drive;
+import ai.pipestream.repository.filesystem.v1.Node;
+import ai.pipestream.repository.v1.ModuleUpdateNotification;
+import ai.pipestream.repository.v1.PipeDocUpdateNotification;
+import ai.pipestream.repository.v1.ProcessRequestUpdateNotification;
+import ai.pipestream.repository.v1.ProcessResponseUpdateNotification;
 import ai.pipestream.schemamanager.entity.ChunkerConfigEntity;
 import ai.pipestream.schemamanager.entity.EmbeddingModelConfig;
 import ai.pipestream.schemamanager.entity.VectorSetEntity;
@@ -9,6 +15,8 @@ import ai.pipestream.schemamanager.opensearch.OpenSearchSchemaService;
 import ai.pipestream.schemamanager.v1.VectorFieldDefinition;
 import ai.pipestream.quarkus.dynamicgrpc.exception.ServiceNotFoundException;
 import ai.pipestream.quarkus.opensearch.grpc.OpenSearchGrpcClientProducer;
+import ai.pipestream.config.v1.*;
+import ai.pipestream.schemamanager.opensearch.IndexConstants.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.ByteString;
@@ -26,11 +34,10 @@ import org.opensearch.protobufs.IndexOperation;
 import org.opensearch.protobufs.OperationContainer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
+
+import static ai.pipestream.schemamanager.opensearch.IndexConstants.*;
 
 /**
  * Core business logic for OpenSearch indexing and organic registration.
@@ -41,7 +48,7 @@ public class OpenSearchIndexingService {
     private static final Logger LOG = Logger.getLogger(OpenSearchIndexingService.class);
 
     @Inject
-    OpenSearchSchemaService openSearchClient;
+    OpenSearchSchemaService openSearchSchemaClient;
 
     @Inject
     org.opensearch.client.opensearch.OpenSearchAsyncClient openSearchAsyncClient;
@@ -64,7 +71,9 @@ public class OpenSearchIndexingService {
         return ensureIndexForDocument(indexName, document, accountId, datasourceId)
             .flatMap(v -> {
                 try {
-                    String jsonDoc = JsonFormat.printer().print(document);
+                    String jsonDoc = JsonFormat.printer()
+                            .preservingProtoFieldNames()
+                            .print(document);
                     return indexDocumentToOpenSearch(indexName, documentId, jsonDoc, routing)
                         .map(success -> IndexDocumentResponse.newBuilder()
                             .setSuccess(success)
@@ -138,13 +147,8 @@ public class OpenSearchIndexingService {
         return VectorSetIndexBindingEntity.findBinding(vs.id, indexName)
             .onItem().transformToUni(existing -> {
                 if (existing != null) {
-                    // Binding exists in DB — verify the OpenSearch index+field is still there.
-                    // This handles the case where the index was deleted externally.
                     return ensureOpenSearchMappingExists(indexName, vs);
                 }
-
-                LOG.infof("Creating index binding: vectorSet=%s index=%s field=%s dimensions=%d",
-                        vs.name, indexName, vs.fieldName, vs.vectorDimensions);
 
                 VectorSetIndexBindingEntity binding = new VectorSetIndexBindingEntity();
                 binding.id = UUID.randomUUID().toString();
@@ -159,23 +163,16 @@ public class OpenSearchIndexingService {
             });
     }
 
-    /**
-     * Verify the OpenSearch index and nested field mapping exist, creating them if missing.
-     * This is idempotent — safe to call on every document, but only does real work when
-     * the index or field is missing (e.g., after an index deletion).
-     */
     private Uni<Void> ensureOpenSearchMappingExists(String indexName, VectorSetEntity vs) {
-        return openSearchClient.nestedMappingExists(indexName, vs.fieldName)
+        return openSearchSchemaClient.nestedMappingExists(indexName, vs.fieldName)
             .onItem().transformToUni(exists -> {
                 if (exists) {
                     return Uni.createFrom().voidItem();
                 }
-                LOG.infof("OpenSearch mapping missing for index=%s field=%s — creating (dimensions=%d)",
-                        indexName, vs.fieldName, vs.vectorDimensions);
                 VectorFieldDefinition vfd = VectorFieldDefinition.newBuilder()
                     .setDimension(vs.vectorDimensions)
                     .build();
-                return openSearchClient.createIndexWithNestedMapping(indexName, vs.fieldName, vfd)
+                return openSearchSchemaClient.createIndexWithNestedMapping(indexName, vs.fieldName, vfd)
                     .replaceWith(Uni.createFrom().voidItem());
             });
     }
@@ -233,7 +230,7 @@ public class OpenSearchIndexingService {
     }
 
     public Uni<CreateIndexResponse> createIndex(CreateIndexRequest request) {
-        return openSearchClient.createIndexWithNestedMapping(request.getIndexName(), "embeddings", request.getVectorFieldDefinition())
+        return openSearchSchemaClient.createIndexWithNestedMapping(request.getIndexName(), "embeddings", request.getVectorFieldDefinition())
             .map(success -> CreateIndexResponse.newBuilder()
                 .setSuccess(success)
                 .setMessage(success ? "Index created successfully" : "Failed to create index")
@@ -241,12 +238,161 @@ public class OpenSearchIndexingService {
     }
 
     public Uni<IndexExistsResponse> indexExists(IndexExistsRequest request) {
-        return openSearchClient.nestedMappingExists(request.getIndexName(), "embeddings")
+        return openSearchSchemaClient.nestedMappingExists(request.getIndexName(), "embeddings")
             .map(exists -> IndexExistsResponse.newBuilder().setExists(exists).build());
     }
 
     public Uni<SearchFilesystemMetaResponse> searchFilesystemMeta(SearchFilesystemMetaRequest request) {
         LOG.infof("Searching filesystem metadata: drive=%s, query=%s", request.getDrive(), request.getQuery());
         return Uni.createFrom().item(SearchFilesystemMetaResponse.newBuilder().setTotalCount(0).build());
+    }
+
+    // ========== LEGACY/ENTITY INDEXING ==========
+
+    public Uni<Void> indexDrive(Drive drive, java.util.UUID key) {
+        Map<String, Object> document = new HashMap<>();
+        document.put("name", drive.getName());
+        document.put("description", drive.getDescription());
+        if (!drive.getMetadata().isEmpty()) document.put("metadata", drive.getMetadata());
+        if (drive.hasCreatedAt()) document.put("created_at", drive.getCreatedAt().getSeconds() * 1000);
+        document.put("indexed_at", System.currentTimeMillis());
+
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.index(r -> r.index(Index.FILESYSTEM_DRIVES.getIndexName()).id(key.toString()).document(document))
+            ).replaceWithVoid();
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+
+    public Uni<Void> deleteDrive(java.util.UUID key) {
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.delete(r -> r.index(Index.FILESYSTEM_DRIVES.getIndexName()).id(key.toString()))
+            ).replaceWithVoid();
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+
+    public Uni<Void> indexNode(Node node, String drive) {
+        Map<String, Object> document = new HashMap<>();
+        document.put(NodeFields.NODE_ID.getFieldName(), String.valueOf(node.getId()));
+        document.put(CommonFields.NAME.getFieldName(), node.getName());
+        document.put(NodeFields.DRIVE.getFieldName(), drive);
+        document.put(NodeFields.NODE_TYPE.getFieldName(), node.getType().name());
+        document.put(NodeFields.PATH.getFieldName(), node.getPath());
+        document.put(CommonFields.CREATED_AT.getFieldName(), node.getCreatedAt().getSeconds() * 1000);
+        document.put(CommonFields.UPDATED_AT.getFieldName(), node.getUpdatedAt().getSeconds() * 1000);
+        document.put(CommonFields.INDEXED_AT.getFieldName(), System.currentTimeMillis());
+
+        String docId = drive + "/" + node.getId();
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.index(r -> r.index(Index.FILESYSTEM_NODES.getIndexName()).id(docId).document(document))
+            ).replaceWithVoid();
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+
+    public Uni<Void> indexModule(ModuleDefinition module) {
+        Map<String, Object> document = new HashMap<>();
+        document.put(ModuleFields.MODULE_ID.getFieldName(), module.getModuleId());
+        document.put(ModuleFields.IMPLEMENTATION_NAME.getFieldName(), module.getImplementationName());
+        document.put(CommonFields.INDEXED_AT.getFieldName(), System.currentTimeMillis());
+
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.index(r -> r.index(Index.REPOSITORY_MODULES.getIndexName()).id(module.getModuleId()).document(document))
+            ).replaceWithVoid();
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+
+    public Uni<Void> deleteModule(String moduleId) {
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.delete(r -> r.index(Index.REPOSITORY_MODULES.getIndexName()).id(moduleId))
+            ).replaceWithVoid();
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+
+    public Uni<Void> indexPipeDoc(PipeDocUpdateNotification notification) {
+        Map<String, Object> document = new HashMap<>();
+        document.put(PipeDocFields.STORAGE_ID.getFieldName(), notification.getStorageId());
+        document.put(PipeDocFields.DOC_ID.getFieldName(), notification.getDocId());
+        document.put(PipeDocFields.TITLE.getFieldName(), notification.getTitle());
+        document.put(CommonFields.INDEXED_AT.getFieldName(), System.currentTimeMillis());
+
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.index(r -> r.index(Index.REPOSITORY_PIPEDOCS.getIndexName()).id(notification.getStorageId()).document(document))
+            ).replaceWithVoid();
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+
+    public Uni<Void> deletePipeDoc(String storageId) {
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.delete(r -> r.index(Index.REPOSITORY_PIPEDOCS.getIndexName()).id(storageId))
+            ).replaceWithVoid();
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+
+    public Uni<Void> indexProcessRequest(ProcessRequestUpdateNotification notification) {
+        Map<String, Object> document = new HashMap<>();
+        document.put(ProcessFields.REQUEST_ID.getFieldName(), notification.getRequestId());
+        document.put(CommonFields.INDEXED_AT.getFieldName(), System.currentTimeMillis());
+
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.index(r -> r.index(Index.REPOSITORY_PROCESS_REQUESTS.getIndexName()).id(notification.getRequestId()).document(document))
+            ).replaceWithVoid();
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+
+    public Uni<Void> deleteProcessRequest(String requestId) {
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.delete(r -> r.index(Index.REPOSITORY_PROCESS_REQUESTS.getIndexName()).id(requestId))
+            ).replaceWithVoid();
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+
+    public Uni<Void> indexProcessResponse(ProcessResponseUpdateNotification notification) {
+        Map<String, Object> document = new HashMap<>();
+        document.put(ProcessFields.RESPONSE_ID.getFieldName(), notification.getResponseId());
+        document.put(CommonFields.INDEXED_AT.getFieldName(), System.currentTimeMillis());
+
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.index(r -> r.index(Index.REPOSITORY_PROCESS_RESPONSES.getIndexName()).id(notification.getResponseId()).document(document))
+            ).replaceWithVoid();
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+
+    public Uni<Void> deleteProcessResponse(String responseId) {
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.delete(r -> r.index(Index.REPOSITORY_PROCESS_RESPONSES.getIndexName()).id(responseId))
+            ).replaceWithVoid();
+        } catch (IOException e) {
+            return Uni.createFrom().failure(e);
+        }
     }
 }
