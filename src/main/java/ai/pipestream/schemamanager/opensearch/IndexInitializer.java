@@ -35,6 +35,7 @@ public class IndexInitializer {
             ensureIndex(Index.REPOSITORY_PIPEDOCS.getIndexName(), buildPipeDocsMapping());
             ensureIndex(Index.FILESYSTEM_NODES.getIndexName(), buildFilesystemNodesMapping());
             ensureIndex(Index.FILESYSTEM_DRIVES.getIndexName(), buildFilesystemDrivesMapping());
+            ensureIndex(Index.REPOSITORY_DOCUMENT_UPLOADS.getIndexName(), buildDocumentUploadsMapping());
         } catch (Exception e) {
             LOG.error("Failed to initialize OpenSearch indices", e);
         }
@@ -105,6 +106,24 @@ public class IndexInitializer {
         b.properties("created_at", Property.of(p -> p.date(d -> d)));
         b.properties("last_accessed", Property.of(p -> p.date(d -> d)));
         b.properties("indexed_at", Property.of(p -> p.date(d -> d)));
+        return b.build();
+    }
+
+    private TypeMapping buildDocumentUploadsMapping() {
+        TypeMapping.Builder b = new TypeMapping.Builder();
+        b.properties("doc_id", Property.of(p -> p.keyword(KeywordProperty.of(k -> k))));
+        b.properties("s3_key", Property.of(p -> p.keyword(KeywordProperty.of(k -> k))));
+        b.properties("connector_id", Property.of(p -> p.keyword(KeywordProperty.of(k -> k))));
+        b.properties("account_id", Property.of(p -> p.keyword(KeywordProperty.of(k -> k))));
+        b.properties("filename", Property.of(p -> p.text(TextProperty.of(t -> t))));
+        b.properties("filename_raw", Property.of(p -> p.keyword(KeywordProperty.of(k -> k))));
+        b.properties("mime_type", Property.of(p -> p.keyword(KeywordProperty.of(k -> k))));
+        b.properties("path", Property.of(p -> p.keyword(KeywordProperty.of(k -> k))));
+        b.properties("path_text", Property.of(p -> p.text(TextProperty.of(t -> t))));
+        b.properties("creation_date", Property.of(p -> p.date(d -> d)));
+        b.properties("last_modified_date", Property.of(p -> p.date(d -> d)));
+        b.properties("uploaded_at", Property.of(p -> p.date(d -> d)));
+        b.properties("metadata", Property.of(p -> p.object(o -> o.dynamic(DynamicMapping.True))));
         return b.build();
     }
 

@@ -4,6 +4,7 @@ import com.google.protobuf.util.JsonFormat;
 import ai.pipestream.config.v1.*;
 import ai.pipestream.repository.filesystem.v1.Drive;
 import ai.pipestream.repository.filesystem.v1.Node;
+import ai.pipestream.events.v1.DocumentUploadedEvent;
 import ai.pipestream.repository.v1.PipeDocUpdateNotification;
 import ai.pipestream.repository.v1.ProcessRequestUpdateNotification;
 import ai.pipestream.repository.v1.ProcessResponseUpdateNotification;
@@ -133,6 +134,53 @@ public class OpenSearchIndexingService {
     public Uni<Void> deletePipeDoc(String storageId) {
         try {
             return Uni.createFrom().completionStage(openSearchClient.delete(r -> r.index(Index.REPOSITORY_PIPEDOCS.getIndexName()).id(storageId))).replaceWithVoid();
+        } catch (Exception e) { return Uni.createFrom().failure(e); }
+    }
+
+    /**
+     * Index a document upload event for tracking raw binary data arrivals.
+     */
+    public Uni<Void> indexDocumentUpload(DocumentUploadedEvent event) {
+        Map<String, Object> document = new HashMap<>();
+        document.put("doc_id", event.getDocId());
+        document.put("s3_key", event.getS3Key());
+        document.put("connector_id", event.getConnectorId());
+        document.put("account_id", event.getAccountId());
+        document.put("filename", event.getFilename());
+        document.put("filename_raw", event.getFilename());
+        document.put("mime_type", event.getMimeType());
+        document.put("path", event.getPath());
+        document.put("path_text", event.getPath());
+        if (event.hasCreationDate()) {
+            document.put("creation_date", event.getCreationDate().getSeconds() * 1000);
+        }
+        if (event.hasLastModifiedDate()) {
+            document.put("last_modified_date", event.getLastModifiedDate().getSeconds() * 1000);
+        }
+        if (!event.getMetadataMap().isEmpty()) {
+            document.put("metadata", event.getMetadataMap());
+        }
+        document.put("uploaded_at", System.currentTimeMillis());
+
+        String docId = event.getAccountId() + "/" + event.getDocId();
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchClient.index(r -> r
+                    .index(Index.REPOSITORY_DOCUMENT_UPLOADS.getIndexName())
+                    .id(docId)
+                    .document(document)
+                )
+            ).replaceWithVoid()
+            .onFailure().invoke(e -> LOG.errorf(e, "Failed to index document upload: %s", event.getDocId()));
+        } catch (Exception e) {
+            return Uni.createFrom().failure(e);
+        }
+    }
+
+    public Uni<Void> deleteDocumentUpload(String accountId, String docId) {
+        String id = accountId + "/" + docId;
+        try {
+            return Uni.createFrom().completionStage(openSearchClient.delete(r -> r.index(Index.REPOSITORY_DOCUMENT_UPLOADS.getIndexName()).id(id))).replaceWithVoid();
         } catch (Exception e) { return Uni.createFrom().failure(e); }
     }
 

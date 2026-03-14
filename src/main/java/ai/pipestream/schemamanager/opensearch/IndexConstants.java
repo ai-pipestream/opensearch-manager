@@ -20,7 +20,8 @@ public class IndexConstants {
         REPOSITORY_PROCESS_RESPONSES("repository-process-responses"),
         REPOSITORY_GRAPHS("repository-graphs"),
         REPOSITORY_GRAPH_NODES("repository-graph-nodes"),
-        REPOSITORY_GRAPH_EDGES("repository-graph-edges");
+        REPOSITORY_GRAPH_EDGES("repository-graph-edges"),
+        REPOSITORY_DOCUMENT_UPLOADS("repository-document-uploads");
         
         private final String indexName;
         

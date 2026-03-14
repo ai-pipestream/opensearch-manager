@@ -8,6 +8,7 @@ import ai.pipestream.repository.filesystem.v1.MutinyFilesystemServiceGrpc;
 import ai.pipestream.repository.filesystem.v1.GetFilesystemNodeRequest;
 import ai.pipestream.repository.filesystem.v1.GetFilesystemNodeResponse;
 import io.smallrye.reactive.messaging.kafka.api.IncomingKafkaRecordMetadata;
+import ai.pipestream.events.v1.DocumentUploadedEvent;
 import ai.pipestream.repository.v1.ModuleUpdateNotification;
 import ai.pipestream.repository.v1.PipeDocUpdateNotification;
 import ai.pipestream.repository.v1.ProcessRequestUpdateNotification;
@@ -176,6 +177,23 @@ public class RepositoryUpdateConsumer {
         });
     }
     
+    @Incoming("document-uploaded-events-in")
+    public Uni<Void> consumeDocumentUploadedEvent(Message<DocumentUploadedEvent> message) {
+        DocumentUploadedEvent event = message.getPayload();
+        LOG.infof("Received document upload event: docId=%s, filename=%s, mimeType=%s, connector=%s",
+                event.getDocId(), event.getFilename(), event.getMimeType(), event.getConnectorId());
+
+        return indexingService.indexDocumentUpload(event)
+            .onFailure().invoke(e ->
+                LOG.errorf(e, "Failed to index document upload event for docId=%s", event.getDocId()))
+            .onItemOrFailure().transformToUni((result, error) -> {
+                if (error != null) {
+                    return Uni.createFrom().failure(error);
+                }
+                return Uni.createFrom().completionStage(message.ack());
+            });
+    }
+
     @Incoming("graph-updates-in")
     public Uni<Void> consumeGraphUpdate(Message<GraphUpdateEvent> message) {
         GraphUpdateEvent event = message.getPayload();
