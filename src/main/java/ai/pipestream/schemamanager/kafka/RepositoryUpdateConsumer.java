@@ -67,11 +67,14 @@ public class RepositoryUpdateConsumer {
     @Incoming("repository-document-events-in")
     public Uni<Void> consumeDocumentEvent(Message<RepositoryEvent> message) {
         RepositoryEvent event = message.getPayload();
-        // #region agent log
-        LOG.info("AGENT_DEBUG run=initial hypothesis=H4 location=RepositoryUpdateConsumer.consumeDocumentEvent message=\"consumer reached after deserialization\"");
-        // #endregion
-        LOG.infof("*** OPENSEARCH-MANAGER RECEIVED REPOSITORY EVENT: documentId=%s, accountId=%s ***",
-                event.getDocumentId(), event.getAccountId());
+        @SuppressWarnings("unchecked")
+        IncomingKafkaRecordMetadata<UUID, RepositoryEvent> metadata =
+                (IncomingKafkaRecordMetadata<UUID, RepositoryEvent>)
+                        message.getMetadata(IncomingKafkaRecordMetadata.class).orElse(null);
+        UUID key = metadata != null ? metadata.getKey() : UUID.randomUUID();
+
+        LOG.infof("Received repository event: documentId=%s, accountId=%s, key=%s",
+                event.getDocumentId(), event.getAccountId(), key);
 
         // Use dynamic gRPC to call repository service and get node metadata (without payload)
         return grpcClientFactory.getClient("repository", MutinyFilesystemServiceGrpc::newMutinyStub)
@@ -86,8 +89,8 @@ public class RepositoryUpdateConsumer {
             })
             .map(GetFilesystemNodeResponse::getNode)
             .flatMap(node -> {
-                // Index the node metadata in OpenSearch
-                return indexingService.indexNode(node, event.getAccountId());
+                // Index the node metadata in OpenSearch using Kafka UUID as the document ID
+                return indexingService.indexNode(node, event.getAccountId(), key);
             })
         .onItemOrFailure().transformToUni((result, error) -> {
             if (error != null) {
