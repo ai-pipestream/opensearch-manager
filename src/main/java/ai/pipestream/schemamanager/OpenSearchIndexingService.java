@@ -714,24 +714,18 @@ public class OpenSearchIndexingService {
         }
     }
 
-    public Uni<Void> indexNode(Node node, String drive, UUID kafkaKey) {
+    public Uni<Void> indexNode(Node node, String drive) {
         Map<String, Object> document = new HashMap<>();
-        document.put(NodeFields.NODE_ID.getFieldName(), kafkaKey.toString());
+        document.put(NodeFields.NODE_ID.getFieldName(), String.valueOf(node.getId()));
         document.put(CommonFields.NAME.getFieldName(), node.getName());
         document.put(NodeFields.DRIVE.getFieldName(), drive);
         document.put(NodeFields.NODE_TYPE.getFieldName(), node.getType().name());
         document.put(NodeFields.PATH.getFieldName(), node.getPath());
-        if (node.hasContentType()) document.put("content_type", node.getContentType());
-        if (node.getSizeBytes() > 0) document.put("size_bytes", node.getSizeBytes());
-        if (node.hasS3Key()) document.put(NodeFields.S3_KEY.getFieldName(), node.getS3Key());
-        if (node.getDocumentId() != null && !node.getDocumentId().isEmpty()) {
-            document.put("document_id", node.getDocumentId());
-        }
         document.put(CommonFields.CREATED_AT.getFieldName(), node.getCreatedAt().getSeconds() * 1000);
         document.put(CommonFields.UPDATED_AT.getFieldName(), node.getUpdatedAt().getSeconds() * 1000);
         document.put(CommonFields.INDEXED_AT.getFieldName(), System.currentTimeMillis());
 
-        String docId = kafkaKey.toString();
+        String docId = drive + "/" + node.getId();
         try {
             return Uni.createFrom().completionStage(
                 openSearchAsyncClient.index(r -> r.index(Index.FILESYSTEM_NODES.getIndexName()).id(docId).document(document))
