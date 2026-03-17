@@ -30,9 +30,6 @@ public class AdminSearchService {
     @Inject
     OpenSearchAsyncClient openSearchAsyncClient;
 
-    @Inject
-    PipestreamSecurityContext securityContext;
-
     /**
      * Execute a search against a specific index.
      *
@@ -80,8 +77,8 @@ public class AdminSearchService {
                 }
 
                 // Account scoping: non-admin callers get filtered to their own data
-                if (!securityContext.isAdmin() && securityContext.isAuthenticated()) {
-                    String accountId = securityContext.accountId();
+                if (!isAdmin() && isAuthenticated()) {
+                    String accountId = accountId();
                     LOG.debugf("Applying account_id filter: %s", accountId);
                     boolBuilder.filter(q -> q.term(t -> t
                             .field("account_id")
@@ -106,5 +103,19 @@ public class AdminSearchService {
                 throw new RuntimeException("Search failed on index " + indexName + ": " + e.getMessage(), e);
             }
         }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+    }
+
+    private String accountId() {
+        String id = PipestreamSecurityContext.ACCOUNT_ID_KEY.get();
+        return id != null ? id : "";
+    }
+
+    private boolean isAdmin() {
+        Boolean admin = PipestreamSecurityContext.IS_ADMIN_KEY.get();
+        return admin != null && admin;
+    }
+
+    private boolean isAuthenticated() {
+        return !accountId().isEmpty();
     }
 }
