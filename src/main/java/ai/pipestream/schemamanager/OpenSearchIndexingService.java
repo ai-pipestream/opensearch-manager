@@ -20,7 +20,9 @@ import ai.pipestream.quarkus.opensearch.grpc.OpenSearchGrpcClientProducer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Struct;
 import com.google.protobuf.util.JsonFormat;
+import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
@@ -32,12 +34,16 @@ import io.smallrye.mutiny.subscription.MultiEmitter;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
 import org.jboss.logging.Logger;
 import org.opensearch.protobufs.BulkRequest;
 import org.opensearch.protobufs.BulkRequestBody;
 import org.opensearch.protobufs.BulkResponse;
 import org.opensearch.protobufs.IndexOperation;
+import org.opensearch.protobufs.Item;
 import org.opensearch.protobufs.OperationContainer;
+import org.opensearch.protobufs.ResponseItem;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -94,11 +100,21 @@ public class OpenSearchIndexingService {
                     jsonDoc = transformSemanticSetsToNestedFields(jsonDoc, document);
 
                     return indexDocumentToOpenSearch(indexName, documentId, jsonDoc, routing)
-                        .map(success -> IndexDocumentResponse.newBuilder()
-                            .setSuccess(success)
-                            .setDocumentId(documentId)
-                            .setMessage(success ? "Document indexed successfully" : "Failed to index document")
-                            .build());
+                        .map(outcome -> {
+                            String msg;
+                            if (outcome.success()) {
+                                msg = "Document indexed successfully";
+                            } else if (outcome.failureDetail() != null && !outcome.failureDetail().isBlank()) {
+                                msg = "Failed to index document: " + outcome.failureDetail();
+                            } else {
+                                msg = "Failed to index document";
+                            }
+                            return IndexDocumentResponse.newBuilder()
+                                .setSuccess(outcome.success())
+                                .setDocumentId(documentId)
+                                .setMessage(msg)
+                                .build();
+                        });
                 } catch (IOException e) {
                     LOG.errorf(e, "Failed to serialize or index document %s", documentId);
                     return Uni.createFrom().item(IndexDocumentResponse.newBuilder()
@@ -133,7 +149,9 @@ public class OpenSearchIndexingService {
                 String semanticId = String.format("%s_%s_%s",
                         vset.getSourceFieldName(), vset.getChunkConfigId(), vset.getEmbeddingId())
                         .replaceAll("[^a-zA-Z0-9_]", "_");
-                String fieldName = "vs_" + semanticId;
+                String fieldName = (vset.hasNestedFieldName() && !vset.getNestedFieldName().isBlank())
+                        ? vset.getNestedFieldName()
+                        : "vs_" + semanticId;
 
                 // Build the nested documents for this vector set's embeddings
                 List<Map<String, Object>> nestedDocs = new ArrayList<>();
@@ -156,6 +174,58 @@ public class OpenSearchIndexingService {
         } catch (Exception e) {
             LOG.warnf("Failed to transform semantic_sets to nested fields, indexing with original structure: %s", e.getMessage());
             return jsonDoc;
+        }
+    }
+
+    /**
+     * Reverses the write-path transform: scans the raw OpenSearch source for vs_* nested fields
+     * and reconstructs SemanticVectorSet objects on the OpenSearchDocument builder.
+     */
+    @SuppressWarnings("unchecked")
+    private void reconstructSemanticSets(Map<String, Object> sourceMap, OpenSearchDocument.Builder docBuilder) {
+        for (Map.Entry<String, Object> entry : sourceMap.entrySet()) {
+            String key = entry.getKey();
+            if (!key.startsWith("vs_") || !(entry.getValue() instanceof List)) {
+                continue;
+            }
+
+            List<Map<String, Object>> nestedDocs = (List<Map<String, Object>>) entry.getValue();
+            SemanticVectorSet.Builder vsetBuilder = SemanticVectorSet.newBuilder()
+                    .setNestedFieldName(key);
+
+            // Parse the semantic ID from the field name: vs_{source}_{chunker}_{embedder}
+            String semanticId = key.substring(3); // strip "vs_"
+            // Extract chunk_config_id and embedding_id from the first nested doc if available
+            if (!nestedDocs.isEmpty()) {
+                Map<String, Object> first = nestedDocs.get(0);
+                if (first.containsKey("chunk_config_id")) {
+                    vsetBuilder.setChunkConfigId(String.valueOf(first.get("chunk_config_id")));
+                }
+                if (first.containsKey("embedding_id")) {
+                    vsetBuilder.setEmbeddingId(String.valueOf(first.get("embedding_id")));
+                }
+            }
+
+            for (Map<String, Object> nested : nestedDocs) {
+                OpenSearchEmbedding.Builder embBuilder = OpenSearchEmbedding.newBuilder();
+
+                if (nested.containsKey("source_text") && nested.get("source_text") != null) {
+                    embBuilder.setSourceText(String.valueOf(nested.get("source_text")));
+                }
+                if (nested.containsKey("is_primary") && nested.get("is_primary") instanceof Boolean) {
+                    embBuilder.setIsPrimary((Boolean) nested.get("is_primary"));
+                }
+                if (nested.containsKey("vector") && nested.get("vector") instanceof List) {
+                    List<Number> vectorNums = (List<Number>) nested.get("vector");
+                    for (Number n : vectorNums) {
+                        embBuilder.addVector(n.floatValue());
+                    }
+                }
+
+                vsetBuilder.addEmbeddings(embBuilder.build());
+            }
+
+            docBuilder.addSemanticSets(vsetBuilder.build());
         }
     }
 
@@ -218,13 +288,24 @@ public class OpenSearchIndexingService {
                     .map(resp -> {
                         List<StreamIndexDocumentsResponse> responses = new ArrayList<>();
                         boolean overallErrors = resp.getErrors();
-                        
+                        String detail = overallErrors ? firstBulkErrorDetail(resp) : null;
+                        if (overallErrors && detail != null) {
+                            LOG.warnf("OpenSearch gRPC bulk batch failed: %s", detail);
+                        }
                         for (int i = 0; i < requestIds.size(); i++) {
+                            String batchMsg;
+                            if (!overallErrors) {
+                                batchMsg = "Streamed via Bulk API";
+                            } else if (detail != null && !detail.isBlank()) {
+                                batchMsg = "Batch contained errors: " + detail;
+                            } else {
+                                batchMsg = "Batch contained errors";
+                            }
                             responses.add(StreamIndexDocumentsResponse.newBuilder()
                                     .setRequestId(requestIds.get(i))
                                     .setDocumentId(documentIds.get(i))
-                                    .setSuccess(!overallErrors) // Simplification: in real scenario, check individual items
-                                    .setMessage(!overallErrors ? "Streamed via Bulk API" : "Batch contained errors")
+                                    .setSuccess(!overallErrors)
+                                    .setMessage(batchMsg)
                                     .build());
                         }
                         return responses;
@@ -243,12 +324,22 @@ public class OpenSearchIndexingService {
                 jsonDoc = transformSemanticSetsToNestedFields(jsonDoc, req.getDocument());
                 String docId = req.hasDocumentId() ? req.getDocumentId() : req.getDocument().getOriginalDocId();
                 return indexDocumentToOpenSearch(req.getIndexName(), docId, jsonDoc, req.hasRouting() ? req.getRouting() : null)
-                    .map(success -> StreamIndexDocumentsResponse.newBuilder()
-                        .setRequestId(req.getRequestId())
-                        .setDocumentId(docId)
-                        .setSuccess(success)
-                        .setMessage(success ? "Indexed via REST fallback" : "REST fallback failed")
-                        .build());
+                    .map(outcome -> {
+                        String msg;
+                        if (outcome.success()) {
+                            msg = "Indexed via REST fallback";
+                        } else if (outcome.failureDetail() != null && !outcome.failureDetail().isBlank()) {
+                            msg = "REST fallback failed: " + outcome.failureDetail();
+                        } else {
+                            msg = "REST fallback failed";
+                        }
+                        return StreamIndexDocumentsResponse.newBuilder()
+                            .setRequestId(req.getRequestId())
+                            .setDocumentId(docId)
+                            .setSuccess(outcome.success())
+                            .setMessage(msg)
+                            .build();
+                    });
             } catch (IOException e) {
                 return Uni.createFrom().item(StreamIndexDocumentsResponse.newBuilder()
                     .setRequestId(req.getRequestId())
@@ -284,15 +375,30 @@ public class OpenSearchIndexingService {
                 vset.getSourceFieldName(), vset.getChunkConfigId(), vset.getEmbeddingId())
                 .replaceAll("[^a-zA-Z0-9_]", "_");
 
-            chain = chain.flatMap(v -> resolveOrCreateVectorSet(semanticId, vset)
-                .onItem().transformToUni(vs -> {
-                    mappings.add(new VectorSetMapping(vs.fieldName, vs.vectorDimensions));
-                    // Transient entities skip binding persistence
-                    if (vs.id != null && vs.id.startsWith("transient-")) {
-                        return Uni.createFrom().voidItem();
-                    }
-                    return ensureIndexBinding(indexName, vs, accountId, datasourceId);
-                }));
+            chain = chain.flatMap(v -> {
+                if (vset.hasVectorSetId() && !vset.getVectorSetId().isBlank()) {
+                    return VectorSetEntity.<VectorSetEntity>findById(vset.getVectorSetId())
+                            .onItem().transformToUni(entity -> {
+                                if (entity == null) {
+                                    return Uni.createFrom().failure(new IllegalStateException(
+                                            "SemanticVectorSet references unknown vector_set_id: " + vset.getVectorSetId()));
+                                }
+                                String nested = vset.hasNestedFieldName() && !vset.getNestedFieldName().isBlank()
+                                        ? vset.getNestedFieldName()
+                                        : entity.fieldName;
+                                mappings.add(new VectorSetMapping(nested, entity.vectorDimensions));
+                                return ensureIndexBinding(indexName, entity, accountId, datasourceId);
+                            });
+                }
+                return resolveOrCreateVectorSet(semanticId, vset)
+                        .onItem().transformToUni(vs -> {
+                            mappings.add(new VectorSetMapping(vs.fieldName, vs.vectorDimensions));
+                            if (vs.id != null && vs.id.startsWith("transient-")) {
+                                return Uni.createFrom().voidItem();
+                            }
+                            return ensureIndexBinding(indexName, vs, accountId, datasourceId);
+                        });
+            });
         }
 
         return chain.replaceWith(mappings);
@@ -342,8 +448,10 @@ public class OpenSearchIndexingService {
                             entity.embeddingModelConfig = emc;
                             entity.fieldName = "vs_" + semanticId;
                             entity.resultSetName = "default";
-                            entity.sourceField = vset.getSourceFieldName();
+                            entity.sourceCel = vset.getSourceFieldName();
                             entity.vectorDimensions = emc.dimensions;
+                            // Required NOT NULL column; same convention as VectorSetServiceEngine default for ad-hoc creates
+                            entity.provenance = "SEMANTIC_INDEXING";
 
                             return entity.<VectorSetEntity>persist().replaceWith(entity);
                         })
@@ -415,20 +523,84 @@ public class OpenSearchIndexingService {
             });
     }
 
-    private Uni<Boolean> indexDocumentToOpenSearch(String indexName, String documentId, String jsonDoc, String routing) {
+    /**
+     * Result of a single-document index to OpenSearch (gRPC bulk or REST). When unsuccessful,
+     * {@code failureDetail} carries the first OpenSearch error (type/reason) when available.
+     */
+    private record BulkIndexOutcome(boolean success, String failureDetail) {
+        static BulkIndexOutcome ok() {
+            return new BulkIndexOutcome(true, null);
+        }
+    }
+
+    private Uni<BulkIndexOutcome> indexDocumentToOpenSearch(String indexName, String documentId, String jsonDoc, String routing) {
         var request = buildBulkIndexRequest(indexName, documentId, jsonDoc, routing);
         return openSearchGrpcClient.bulk(request)
-                .map(this::isGrpcBulkSuccess)
+                .map(this::interpretGrpcBulkResponse)
                 .onFailure(ServiceNotFoundException.class)
                 .recoverWithUni(throwable -> indexDocumentToOpenSearchViaRest(indexName, documentId, jsonDoc, routing));
     }
 
-    private Uni<Boolean> indexDocumentToOpenSearchViaRest(String indexName, String documentId, String jsonDoc, String routing) {
+    private BulkIndexOutcome interpretGrpcBulkResponse(BulkResponse response) {
+        if (!response.getErrors()) {
+            return BulkIndexOutcome.ok();
+        }
+        String detail = firstBulkErrorDetail(response);
+        if (detail != null) {
+            LOG.warnf("OpenSearch gRPC bulk reported errors: %s", detail);
+        }
+        return new BulkIndexOutcome(false, detail);
+    }
+
+    /**
+     * Extracts a short human-readable reason from the first failed bulk line item.
+     */
+    private static String firstBulkErrorDetail(BulkResponse response) {
+        if (response.getItemsCount() == 0) {
+            return "bulk errors=true but no response items";
+        }
+        for (Item item : response.getItemsList()) {
+            ResponseItem ri = responseItemFrom(item);
+            if (ri == null) {
+                continue;
+            }
+            if (ri.hasError()) {
+                var err = ri.getError();
+                String type = err.getType();
+                String reason = err.getReason();
+                String idx = ri.getXIndex();
+                String prefix = (idx != null && !idx.isEmpty()) ? "[" + idx + "] " : "";
+                String t = (type != null && !type.isEmpty()) ? type : "error";
+                String r = (reason != null && !reason.isEmpty()) ? reason : "unknown";
+                return prefix + t + ": " + r;
+            }
+            int st = ri.getStatus();
+            if (st >= 400) {
+                return String.format("[%s] HTTP %d", ri.getXIndex(), st);
+            }
+        }
+        return "OpenSearch bulk failed (no per-item error details)";
+    }
+
+    private static ResponseItem responseItemFrom(Item item) {
+        if (item == null) {
+            return null;
+        }
+        return switch (item.getItemCase()) {
+            case INDEX -> item.getIndex();
+            case CREATE -> item.getCreate();
+            case UPDATE -> item.getUpdate();
+            case DELETE -> item.getDelete();
+            case ITEM_NOT_SET -> null;
+        };
+    }
+
+    private Uni<BulkIndexOutcome> indexDocumentToOpenSearchViaRest(String indexName, String documentId, String jsonDoc, String routing) {
         Map<String, Object> docMap;
         try {
             docMap = objectMapper.readValue(jsonDoc, new TypeReference<>() {});
         } catch (IOException e) {
-            return Uni.createFrom().item(false);
+            return Uni.createFrom().item(new BulkIndexOutcome(false, "JSON parse: " + e.getMessage()));
         }
 
         var indexBuilder = new org.opensearch.client.opensearch.core.IndexRequest.Builder<Map<String, Object>>()
@@ -442,15 +614,16 @@ public class OpenSearchIndexingService {
         return Uni.createFrom().item(() -> {
             try {
                 var response = openSearchAsyncClient.index(indexBuilder.build()).get();
-                return "created".equals(response.result().jsonValue()) || "updated".equals(response.result().jsonValue());
+                boolean ok = "created".equals(response.result().jsonValue()) || "updated".equals(response.result().jsonValue());
+                if (ok) {
+                    return BulkIndexOutcome.ok();
+                }
+                return new BulkIndexOutcome(false, "OpenSearch index result: " + response.result());
             } catch (IOException | InterruptedException | ExecutionException e) {
-                return false;
+                String m = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+                return new BulkIndexOutcome(false, "REST index: " + m);
             }
         }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
-    }
-
-    private boolean isGrpcBulkSuccess(BulkResponse response) {
-        return !response.getErrors();
     }
 
     private BulkRequest buildBulkIndexRequest(String indexName, String documentId, String jsonDoc, String routing) {
@@ -567,6 +740,13 @@ public class OpenSearchIndexingService {
     }
 
     public Uni<Void> indexNode(Node node, String drive, UUID kafkaKey) {
+        return indexNode(node, drive, kafkaKey, null, 30);
+    }
+
+    /**
+     * Index filesystem node metadata. OpenSearch document id is always {@code kafkaKey} (same as producer key).
+     */
+    public Uni<Void> indexNode(Node node, String drive, UUID kafkaKey, String datasourceId, int retentionIntentDays) {
         Map<String, Object> document = new HashMap<>();
         document.put(NodeFields.NODE_ID.getFieldName(), kafkaKey.toString());
         document.put(CommonFields.NAME.getFieldName(), node.getName());
@@ -577,6 +757,10 @@ public class OpenSearchIndexingService {
         if (node.getSizeBytes() > 0) document.put("size_bytes", node.getSizeBytes());
         if (!node.getS3Key().isEmpty()) document.put(NodeFields.S3_KEY.getFieldName(), node.getS3Key());
         if (!node.getDocumentId().isEmpty()) document.put("document_id", node.getDocumentId());
+        if (datasourceId != null && !datasourceId.isBlank()) {
+            document.put("datasource_id", datasourceId);
+        }
+        document.put("retention_intent_days", retentionIntentDays);
         document.put(CommonFields.CREATED_AT.getFieldName(), node.getCreatedAt().getSeconds() * 1000);
         document.put(CommonFields.UPDATED_AT.getFieldName(), node.getUpdatedAt().getSeconds() * 1000);
         document.put(CommonFields.INDEXED_AT.getFieldName(), System.currentTimeMillis());
@@ -584,6 +768,28 @@ public class OpenSearchIndexingService {
         return Uni.createFrom().voidItem();
     }
 
+    /**
+     * Deletes the filesystem node document indexed under the Kafka message key (must match {@link #indexNode}).
+     */
+    public Uni<Void> deleteFilesystemNodeByKafkaKey(UUID kafkaKey) {
+        try {
+            return Uni.createFrom().completionStage(
+                openSearchAsyncClient.delete(r -> r.index(Index.FILESYSTEM_NODES.getIndexName()).id(kafkaKey.toString()))
+            ).replaceWithVoid()
+                    .onFailure().recoverWithUni(err -> {
+                        LOG.warnf(err, "OpenSearch delete for filesystem node id=%s (ack anyway; idempotent consumer)",
+                                kafkaKey);
+                        return Uni.createFrom().voidItem();
+                    });
+        } catch (Exception e) {
+            return Uni.createFrom().voidItem();
+        }
+    }
+
+    /**
+     * @deprecated OpenSearch filesystem node ids are Kafka UUID keys, not {@code drive/nodeId}.
+     */
+    @Deprecated
     public Uni<Void> deleteNode(String nodeId, String drive) {
         String docId = drive + "/" + nodeId;
         try {
@@ -628,6 +834,9 @@ public class OpenSearchIndexingService {
             if (ownership.getAclsCount() > 0) {
                 document.put("acls", ownership.getAclsList());
             }
+        }
+        if (notification.hasRetentionIntentDays()) {
+            document.put("retention_intent_days", notification.getRetentionIntentDays());
         }
         document.put(CommonFields.CREATED_AT.getFieldName(), notification.getCreatedAt().getSeconds() * 1000);
         document.put(CommonFields.UPDATED_AT.getFieldName(), notification.getUpdatedAt().getSeconds() * 1000);
@@ -715,11 +924,53 @@ public class OpenSearchIndexingService {
     // ===== Index administration methods =====
 
     public Uni<CreateIndexResponse> createIndex(CreateIndexRequest request) {
-        return openSearchSchemaClient.createIndexWithNestedMapping(request.getIndexName(), "embeddings", request.getVectorFieldDefinition())
-            .map(success -> CreateIndexResponse.newBuilder()
-                .setSuccess(success)
-                .setMessage(success ? "Index created successfully" : "Failed to create index")
-                .build());
+        String vectorFieldName = request.hasVectorFieldName() && !request.getVectorFieldName().isBlank()
+                ? request.getVectorFieldName()
+                : "embeddings";
+        return openSearchSchemaClient.createIndexWithNestedMapping(
+                        request.getIndexName(), vectorFieldName, request.getVectorFieldDefinition())
+                .map(success -> CreateIndexResponse.newBuilder()
+                        .setSuccess(success)
+                        .setMessage(success ? "Index created successfully" : "Failed to create index")
+                        .build());
+    }
+
+    /**
+     * Simplified index mapping for admin UIs (mirrors IndexAdminResource JSON shape).
+     */
+    public Uni<GetIndexMappingResponse> getIndexMapping(GetIndexMappingRequest request) {
+        String indexName = request.getIndexName();
+        return Uni.createFrom()
+                .completionStage(() -> {
+                    try {
+                        return openSearchAsyncClient.indices()
+                                .getMapping(b -> b.index(indexName));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .map(response -> {
+                    Map<String, Object> fields = new LinkedHashMap<>();
+                    response.result().forEach((idx, indexMapping) -> {
+                        Map<String, Object> props = new LinkedHashMap<>();
+                        indexMapping.mappings().properties().forEach((name, prop) -> {
+                            Map<String, Object> fieldInfo = new LinkedHashMap<>();
+                            fieldInfo.put("type", prop._kind().jsonValue());
+                            props.put(name, fieldInfo);
+                        });
+                        fields.put(idx, props);
+                    });
+                    Struct.Builder structBuilder = Struct.newBuilder();
+                    try {
+                        JsonFormat.parser().merge(objectMapper.writeValueAsString(fields), structBuilder);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to build mapping struct: " + e.getMessage(), e);
+                    }
+                    return GetIndexMappingResponse.newBuilder()
+                            .setIndexName(indexName)
+                            .setMappings(structBuilder.build())
+                            .build();
+                });
     }
 
     public Uni<IndexExistsResponse> indexExists(IndexExistsRequest request) {
@@ -907,46 +1158,97 @@ public class OpenSearchIndexingService {
     }
 
     public Uni<ListIndicesResponse> listIndices(ListIndicesRequest request) {
+        // OpenSearch async completion runs on an HTTP I/O thread without a Vert.x duplicated context.
+        // Hibernate Reactive requires the request context — capture it here while still on the gRPC/event-loop thread.
+        Context vertxContext = Vertx.currentContext();
+        if (vertxContext == null) {
+            return Uni.createFrom().failure(new IllegalStateException(
+                    "listIndices must run on a Vert.x context (e.g. gRPC or HTTP worker with context)"));
+        }
+
         String prefix = request.hasPrefixFilter() ? request.getPrefixFilter() : null;
         LOG.debugf("Listing indices with prefix filter: %s", prefix);
 
-        return Uni.createFrom().item(() -> {
-            try {
-                String indexPattern = (prefix != null && !prefix.isBlank()) ? prefix + "*" : "*";
-                var catResponse = openSearchAsyncClient.cat()
-                        .indices(b -> b.index(indexPattern)).get();
-
-                List<OpenSearchIndexInfo> indices = new ArrayList<>();
-                for (var record : catResponse.valueBody()) {
-                    String name = record.index();
-                    // Skip internal indices
-                    if (name != null && name.startsWith(".")) continue;
-
-                    long docCount = 0;
-                    long sizeBytes = 0;
-                    String status = record.health() != null ? record.health() : "unknown";
-
-                    if (record.docsCount() != null) {
-                        try { docCount = Long.parseLong(record.docsCount()); } catch (NumberFormatException ignored) {}
+        String indexPattern = (prefix != null && !prefix.isBlank()) ? prefix + "*" : "*";
+        return Uni.createFrom().completionStage(() -> {
+                    try {
+                        return openSearchAsyncClient.cat()
+                                .indices(b -> b.index(indexPattern));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
-                    if (record.storeSize() != null) {
-                        sizeBytes = parseSizeToBytes(record.storeSize());
+                })
+                .flatMap(catResponse -> {
+                    List<OpenSearchIndexInfo.Builder> builders = new ArrayList<>();
+                    for (var record : catResponse.valueBody()) {
+                        String name = record.index();
+                        if (name != null && name.startsWith(".")) {
+                            continue;
+                        }
+
+                        long docCount = 0;
+                        long sizeBytes = 0;
+                        String status = record.health() != null ? record.health() : "unknown";
+
+                        if (record.docsCount() != null) {
+                            try {
+                                docCount = Long.parseLong(record.docsCount());
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
+                        if (record.storeSize() != null) {
+                            sizeBytes = parseSizeToBytes(record.storeSize());
+                        }
+
+                        builders.add(OpenSearchIndexInfo.newBuilder()
+                                .setName(name != null ? name : "")
+                                .setDocumentCount(docCount)
+                                .setSizeInBytes(sizeBytes)
+                                .setStatus(status));
                     }
 
-                    indices.add(OpenSearchIndexInfo.newBuilder()
-                            .setName(name != null ? name : "")
-                            .setDocumentCount(docCount)
-                            .setSizeInBytes(sizeBytes)
-                            .setStatus(status)
-                            .build());
-                }
+                    if (builders.isEmpty()) {
+                        return Uni.createFrom().item(ListIndicesResponse.getDefaultInstance());
+                    }
 
-                return ListIndicesResponse.newBuilder().addAllIndices(indices).build();
-            } catch (Exception e) {
-                LOG.warnf("Failed to list indices: %s", e.getMessage());
-                return ListIndicesResponse.newBuilder().build();
-            }
-        }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+                    List<String> names = new ArrayList<>(builders.size());
+                    for (OpenSearchIndexInfo.Builder b : builders) {
+                        names.add(b.getName());
+                    }
+
+                    return Uni.createFrom().<ListIndicesResponse>emitter(emitter ->
+                            vertxContext.runOnContext(v ->
+                                    Panache.withSession(() -> VectorSetIndexBindingEntity.findAllByIndexNames(names))
+                                            .map(bindings -> {
+                                                Map<String, List<VectorFieldSummary>> byIndex = new HashMap<>();
+                                                for (VectorSetIndexBindingEntity binding : bindings) {
+                                                    VectorSetEntity vs = binding.vectorSet;
+                                                    if (vs == null) {
+                                                        continue;
+                                                    }
+                                                    VectorFieldSummary vf = VectorFieldSummary.newBuilder()
+                                                            .setVectorSetId(vs.id)
+                                                            .setVectorSetName(vs.name)
+                                                            .setFieldName(vs.fieldName)
+                                                            .setResultSetName(vs.resultSetName)
+                                                            .setDimensions(vs.vectorDimensions)
+                                                            .build();
+                                                    byIndex.computeIfAbsent(binding.indexName, k -> new ArrayList<>()).add(vf);
+                                                }
+                                                List<OpenSearchIndexInfo> indices = new ArrayList<>(builders.size());
+                                                for (OpenSearchIndexInfo.Builder bb : builders) {
+                                                    String n = bb.getName();
+                                                    bb.addAllVectorFields(byIndex.getOrDefault(n, List.of()));
+                                                    indices.add(bb.build());
+                                                }
+                                                return ListIndicesResponse.newBuilder().addAllIndices(indices).build();
+                                            })
+                                            .subscribe().with(emitter::complete, emitter::fail)));
+                })
+                .onFailure().recoverWithItem(e -> {
+                    LOG.warnf("Failed to list indices: %s", e.getMessage());
+                    return ListIndicesResponse.newBuilder().build();
+                });
     }
 
     public Uni<GetIndexStatsResponse> getIndexStats(GetIndexStatsRequest request) {
@@ -1039,9 +1341,14 @@ public class OpenSearchIndexingService {
                 }
 
                 // Parse the source back into OpenSearchDocument
-                String sourceJson = objectMapper.writeValueAsString(response.source());
+                @SuppressWarnings("unchecked")
+                Map<String, Object> sourceMap = (Map<String, Object>) response.source();
+                String sourceJson = objectMapper.writeValueAsString(sourceMap);
                 OpenSearchDocument.Builder docBuilder = OpenSearchDocument.newBuilder();
                 JsonFormat.parser().ignoringUnknownFields().merge(sourceJson, docBuilder);
+
+                // Reverse the write-path transform: reconstruct semantic_sets from vs_* nested fields
+                reconstructSemanticSets(sourceMap, docBuilder);
 
                 return GetOpenSearchDocumentResponse.newBuilder()
                         .setFound(true)

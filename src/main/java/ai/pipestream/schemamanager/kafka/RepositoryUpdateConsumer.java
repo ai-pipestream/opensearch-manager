@@ -25,23 +25,31 @@ import org.jboss.logging.Logger;
 import java.util.UUID;
 
 /**
- * Consumes repository update notifications from Kafka and indexes them in OpenSearch
+ * Consumes repository update notifications from Kafka and indexes them in OpenSearch.
+ * <p>
+ * Failure handling is provided by the Apicurio Kafka plugin which sets
+ * {@code failure-strategy=ignore} by default for all incoming channels,
+ * so a single failed message never kills the channel or deregisters the
+ * service from Consul.
+ * <p>
+ * Consumers that need the Kafka UUID key use {@code Message<>} for metadata
+ * access only — not for ack control. All others use bare payloads.
  */
 @ApplicationScoped
 public class RepositoryUpdateConsumer {
-    
+
     private static final Logger LOG = Logger.getLogger(RepositoryUpdateConsumer.class);
-    
+
     @Inject
     OpenSearchIndexingService indexingService;
 
     @Inject
     DynamicGrpcClientFactory grpcClientFactory;
-    
+
     @Incoming("drive-updates-in")
     public Uni<Void> consumeDriveUpdate(Message<DriveUpdateNotification> message) {
         DriveUpdateNotification notification = message.getPayload();
-        // Get UUID key from Kafka metadata
+        // Need Message<> wrapper here to extract the UUID key for indexing
         @SuppressWarnings("unchecked")
         IncomingKafkaRecordMetadata<UUID, DriveUpdateNotification> metadata =
                 (IncomingKafkaRecordMetadata<UUID, DriveUpdateNotification>)
@@ -58,15 +66,16 @@ public class RepositoryUpdateConsumer {
         )
         .onItemOrFailure().transformToUni((result, error) -> {
             if (error != null) {
-                return Uni.createFrom().failure(error);
+                LOG.errorf(error, "Failed to process drive update for %s", notification.getDrive().getName());
             }
             return Uni.createFrom().completionStage(message.ack());
         });
     }
-    
+
     @Incoming("repository-document-events-in")
     public Uni<Void> consumeDocumentEvent(Message<RepositoryEvent> message) {
         RepositoryEvent event = message.getPayload();
+        // Need Message<> wrapper here to extract the UUID key for indexing
         @SuppressWarnings("unchecked")
         IncomingKafkaRecordMetadata<UUID, RepositoryEvent> metadata =
                 (IncomingKafkaRecordMetadata<UUID, RepositoryEvent>)
@@ -76,155 +85,121 @@ public class RepositoryUpdateConsumer {
         LOG.infof("Received repository event: documentId=%s, accountId=%s, key=%s",
                 event.getDocumentId(), event.getAccountId(), key);
 
-        // Use dynamic gRPC to call repository service and get node metadata (without payload)
         return grpcClientFactory.getClient("repository", MutinyFilesystemServiceGrpc::newMutinyStub)
             .flatMap(repoClient -> {
                 GetFilesystemNodeRequest getNodeRequest = GetFilesystemNodeRequest.newBuilder()
                     .setDrive(event.getAccountId())
                     .setDocumentId(event.getDocumentId())
-                    .setIncludePayload(false) // Metadata only for indexing
+                    .setIncludePayload(false)
                     .build();
-
                 return repoClient.getFilesystemNode(getNodeRequest);
             })
             .map(GetFilesystemNodeResponse::getNode)
-            .flatMap(node -> {
-                // Index the node metadata in OpenSearch using Kafka UUID as the document ID
-                return indexingService.indexNode(node, event.getAccountId(), key);
-            })
-        .onItemOrFailure().transformToUni((result, error) -> {
-            if (error != null) {
-                return Uni.createFrom().failure(error);
-            }
-            return Uni.createFrom().completionStage(message.ack());
-        });
+            .flatMap(node -> indexingService.indexNode(node, event.getAccountId(), key))
+            .onItemOrFailure().transformToUni((result, error) -> {
+                if (error != null) {
+                    LOG.errorf(error, "Failed to process repository event for documentId=%s", event.getDocumentId());
+                }
+                return Uni.createFrom().completionStage(message.ack());
+            });
     }
-    
+
     @Incoming("module-updates-in")
-    public Uni<Void> consumeModuleUpdate(Message<ModuleUpdateNotification> message) {
-        ModuleUpdateNotification notification = message.getPayload();
-        LOG.infof("Received module update: type=%s, module=%s", 
+    public Uni<Void> consumeModuleUpdate(ModuleUpdateNotification notification) {
+        LOG.infof("Received module update: type=%s, module=%s",
                 notification.getUpdateType(), notification.getModule().getModuleId());
-        
+
         return processUpdate(
                 notification.getUpdateType(),
                 () -> indexingService.indexModule(notification.getModule()),
                 () -> indexingService.deleteModule(notification.getModule().getModuleId()),
                 "module " + notification.getModule().getModuleId()
         )
-        .onItemOrFailure().transformToUni((result, error) -> {
-            if (error != null) {
-                return Uni.createFrom().failure(error);
-            }
-            return Uni.createFrom().completionStage(message.ack());
-        });
+        .onFailure().invoke(e ->
+                LOG.errorf(e, "Failed to process module update for %s", notification.getModule().getModuleId()))
+        .onFailure().recoverWithNull()
+        .replaceWithVoid();
     }
-    
+
     @Incoming("pipedoc-updates-in")
-    public Uni<Void> consumePipeDocUpdate(Message<PipeDocUpdateNotification> message) {
-        PipeDocUpdateNotification notification = message.getPayload();
-        LOG.infof("Received pipedoc update: type=%s, docId=%s", 
+    public Uni<Void> consumePipeDocUpdate(PipeDocUpdateNotification notification) {
+        LOG.infof("Received pipedoc update: type=%s, docId=%s",
                 notification.getUpdateType(), notification.getDocId());
-        
+
         return processUpdate(
                 notification.getUpdateType(),
                 () -> indexingService.indexPipeDoc(notification),
                 () -> indexingService.deletePipeDoc(notification.getStorageId()),
                 "pipedoc storageId=" + notification.getStorageId()
         )
-        .onItemOrFailure().transformToUni((result, error) -> {
-            if (error != null) {
-                return Uni.createFrom().failure(error);
-            }
-            return Uni.createFrom().completionStage(message.ack());
-        });
+        .onFailure().invoke(e ->
+                LOG.errorf(e, "Failed to process pipedoc update for %s", notification.getStorageId()))
+        .onFailure().recoverWithNull()
+        .replaceWithVoid();
     }
-    
+
     @Incoming("process-request-updates-in")
-    public Uni<Void> consumeProcessRequestUpdate(Message<ProcessRequestUpdateNotification> message) {
-        ProcessRequestUpdateNotification notification = message.getPayload();
-        LOG.infof("Received process request update: type=%s, requestId=%s", 
+    public Uni<Void> consumeProcessRequestUpdate(ProcessRequestUpdateNotification notification) {
+        LOG.infof("Received process request update: type=%s, requestId=%s",
                 notification.getUpdateType(), notification.getRequestId());
-        
+
         return processUpdate(
                 notification.getUpdateType(),
                 () -> indexingService.indexProcessRequest(notification),
                 () -> indexingService.deleteProcessRequest(notification.getRequestId()),
                 "process request " + notification.getRequestId()
         )
-        .onItemOrFailure().transformToUni((result, error) -> {
-            if (error != null) {
-                return Uni.createFrom().failure(error);
-            }
-            return Uni.createFrom().completionStage(message.ack());
-        });
+        .onFailure().invoke(e ->
+                LOG.errorf(e, "Failed to process request update for %s", notification.getRequestId()))
+        .onFailure().recoverWithNull()
+        .replaceWithVoid();
     }
-    
+
     @Incoming("process-response-updates-in")
-    public Uni<Void> consumeProcessResponseUpdate(Message<ProcessResponseUpdateNotification> message) {
-        ProcessResponseUpdateNotification notification = message.getPayload();
-        LOG.infof("Received process response update: type=%s, responseId=%s", 
+    public Uni<Void> consumeProcessResponseUpdate(ProcessResponseUpdateNotification notification) {
+        LOG.infof("Received process response update: type=%s, responseId=%s",
                 notification.getUpdateType(), notification.getResponseId());
-        
+
         return processUpdate(
                 notification.getUpdateType(),
                 () -> indexingService.indexProcessResponse(notification),
                 () -> indexingService.deleteProcessResponse(notification.getResponseId()),
                 "process response " + notification.getResponseId()
         )
-        .onItemOrFailure().transformToUni((result, error) -> {
-            if (error != null) {
-                return Uni.createFrom().failure(error);
-            }
-            return Uni.createFrom().completionStage(message.ack());
-        });
+        .onFailure().invoke(e ->
+                LOG.errorf(e, "Failed to process response update for %s", notification.getResponseId()))
+        .onFailure().recoverWithNull()
+        .replaceWithVoid();
     }
-    
+
     @Incoming("document-uploaded-events-in")
-    public Uni<Void> consumeDocumentUploadedEvent(Message<DocumentUploadedEvent> message) {
-        DocumentUploadedEvent event = message.getPayload();
+    public Uni<Void> consumeDocumentUploadedEvent(DocumentUploadedEvent event) {
         LOG.infof("Received document upload event: docId=%s, filename=%s, mimeType=%s, connector=%s",
                 event.getDocId(), event.getFilename(), event.getMimeType(), event.getConnectorId());
 
         return indexingService.indexDocumentUpload(event)
             .onFailure().invoke(e ->
                 LOG.errorf(e, "Failed to index document upload event for docId=%s", event.getDocId()))
-            .onItemOrFailure().transformToUni((result, error) -> {
-                if (error != null) {
-                    return Uni.createFrom().failure(error);
-                }
-                return Uni.createFrom().completionStage(message.ack());
-            });
+            .onFailure().recoverWithNull()
+            .replaceWithVoid();
     }
 
     @Incoming("graph-updates-in")
-    public Uni<Void> consumeGraphUpdate(Message<GraphUpdateEvent> message) {
-        GraphUpdateEvent event = message.getPayload();
+    public Uni<Void> consumeGraphUpdate(GraphUpdateEvent event) {
         LOG.infof("Received graph update event: kind=%s, graphId=%s, clusterId=%s, version=%s",
                 event.getUpdateKind(), event.getGraphId(), event.getClusterId(), event.getVersion());
 
-        // The graph-updates topic now carries engine cache-reload events, not full graph payloads.
-        // Acknowledge on success and keep this consumer as a no-op placeholder for now.
-        return Uni.createFrom().deferred(() -> {
-            if (event.getUpdateKind() == GraphUpdateEventKind.GRAPH_UPDATE_EVENT_KIND_DEACTIVATED) {
-                LOG.debugf("Ignoring deactivated graph update in opensearch-manager: graph=%s cluster=%s",
-                        event.getGraphId(), event.getClusterId());
-            } else if (event.getUpdateKind() == GraphUpdateEventKind.GRAPH_UPDATE_EVENT_KIND_ACTIVATED) {
-                LOG.debugf("Ignoring activated graph update in opensearch-manager: graph=%s cluster=%s version=%s",
-                        event.getGraphId(), event.getClusterId(), event.getVersion());
-            }
-            return Uni.createFrom().voidItem();
-        })
-        .onItemOrFailure().transformToUni((result, error) -> {
-            if (error != null) {
-                LOG.errorf(error, "Failed to process graph update event for graph %s cluster %s", event.getGraphId(), event.getClusterId());
-                return Uni.createFrom().failure(error);
-            }
-            return Uni.createFrom().completionStage(message.ack());
-        });
+        if (event.getUpdateKind() == GraphUpdateEventKind.GRAPH_UPDATE_EVENT_KIND_DEACTIVATED) {
+            LOG.debugf("Ignoring deactivated graph update: graph=%s cluster=%s",
+                    event.getGraphId(), event.getClusterId());
+        } else if (event.getUpdateKind() == GraphUpdateEventKind.GRAPH_UPDATE_EVENT_KIND_ACTIVATED) {
+            LOG.debugf("Ignoring activated graph update: graph=%s cluster=%s version=%s",
+                    event.getGraphId(), event.getClusterId(), event.getVersion());
+        }
+        return Uni.createFrom().voidItem();
     }
-    
-    private Uni<Void> processUpdate(String updateType, 
+
+    private Uni<Void> processUpdate(String updateType,
                                     java.util.function.Supplier<Uni<Void>> createOrUpdateAction,
                                     java.util.function.Supplier<Uni<Void>> deleteAction,
                                     String entityDescription) {
@@ -232,11 +207,11 @@ public class RepositoryUpdateConsumer {
             case "CREATED":
             case "UPDATED":
                 return createOrUpdateAction.get()
-                    .onFailure().invoke(e -> 
+                    .onFailure().invoke(e ->
                         LOG.errorf(e, "Failed to index %s", entityDescription));
             case "DELETED":
                 return deleteAction.get()
-                    .onFailure().invoke(e -> 
+                    .onFailure().invoke(e ->
                         LOG.errorf(e, "Failed to delete %s", entityDescription));
             default:
                 LOG.warnf("Unknown update type: %s for %s", updateType, entityDescription);
